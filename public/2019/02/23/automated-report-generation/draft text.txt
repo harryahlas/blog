@@ -1,0 +1,49 @@
+Use R to add a Data Disclaimer when Creating Excel Reports
+
+If you work  exclusively with clean data that can be accessed and distributed freely without fear of legal action then (1) I envy you and (2) this read is probably not for you.
+
+In this post we are going to use R to create a simple Excel human resources report and add a data disclaimer.  You can find the R script here: xxxx.
+
+I regularly deal with confidential and restricted data in a legal/regulatory environment where data needs to be not only accurate, but secure as well.  A robust disclaimer is usually essential to meeting those needs.
+
+We often distribute our data in Excel format.  If you are cringing after reading that last sentence, no worries, bear with me on this. Legal and regulatory is better left bland. Excel/PDF/csv etc reports are more suitable for this type of work than, say a Tableau dashboard or Shiny app. The good news is we can actually turn this archaic practice into something in our favor.  We can use Excel's ability to have multiple tabs to create a data disclaimer.  This will accomplish two things: 
+1. Clearly explain to our client how, if at all, s/he can distribute our data
+2. Detail exactly how we arrived at the data, ensuring a clear understanding of what is in the data and therefore improving the client's understanding of the data, resulting in perceived improved accuracy.
+
+It can't be emphasized enough how critical it is to footnote/document your reporting in a way the client can digest.  
+
+For this example, we'll say the legal team wants to see what turnover looked like 10 years ago for the different jobs in the company.  Let's begin with the R script.  First things first, let's create a report name/number for tracking as well as an as of date:
+
+as of date <- today()??
+report_name <- "Request PA73405 - Headcount and Attrition Summary by Job 2009"
+
+Next, let's get our data.  We will download what I call a "desk history" table that I have created for an imaginary organization.  (Note: I intend for this database to be the subject of many future posts) :
+
+IMport Code
+head(name of object) (or glimpse?)
+
+You'll notice the first variable is desk_id. You can think of it as the employee's unique desk number.  The desk_id_start_date and desk_id_end_dates refer to the dates the employee was at that "desk".  If the employee switched to a new job somewhere else in this company they would likely switch to a new desk_id.  The desk_id is a critical key: from desk_id we can determine what job, location, manager, line of business, etc. belongs to the employee assigned to that desk_id.
+
+Now that we have the raw data, let's use some standard tidyverse functions to create a simple data frame that summarizes xxxx.
+
+Filter/join/etc
+
+The data is ready to be exported.  Next, we need to create a disclaimer that will include distribution information as well as information about how the data was pulled.  Here is the disclaimer:
+disclaimer_info <- c("Source: github/harry ahlas",
+paste("data as of", as of date, "."),
+"Data includes all employees rolling up to CEO xxx who were active at any point from Jan 1, 2002 through December 31, 2002",
+"Data is confidential and should be shared on a need to know basis only.",
+"Do not distribute externally.")
+
+I need to mention this disclaimer is very basic for demonstration purposes only.   <b>Always consult your legal team for approval of the final verbiage</b>.
+
+Note that the text is enclosed in a concatenation <code> c("xxx", "yyy", "zzz") </code>.  The openxlsx package will look for the commas between quoted words and determine that words that come after the commas go into a new row in Excel.
+
+In some instances you may want to include a link to the source or your R script.  In this case we have the request number included in the name of the file, which is enough.
+
+Why Automate?
+
+For a one time report this may not be useful but if you are automating several reports, this can come in super handy. In fact, we will use this piece in a later post where we will tackle report automation.
+
+Next time, we will Let's take it to the next level.  Let's automate this into breakout reports, one for each line of business
+
