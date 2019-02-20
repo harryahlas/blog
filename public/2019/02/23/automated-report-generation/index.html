@@ -7,7 +7,7 @@
 
 
 <title>Harry Ahlas - Data Disclaimer in R</title>
-<meta property="og:title" content="Harry Ahlas - Data Disclaimer">
+<meta property="og:title" content="Harry Ahlas - Automated Excel Report Generation with R">
 
 
 
@@ -54,7 +54,7 @@
     <span class="article-duration">30 min read</span>
     
 
-    <h1 class="article-title">Use R to add a Data Disclaimer to an Excel Report</h1>
+    <h1 class="article-title">Automated Excel Report Generation with R</h1>
 
     <span class="article-date">2019/23/16</span>
 
@@ -62,196 +62,217 @@
 
 
 
-In our last article, 
+<p>This post is a follow-up to my earlier post, <a href="http://earlydemise.com/blog/public/2019/02/16/information-security-tab/index.html">Use R to add a Data Disclaimer to an Excel Report</a>. In that post, we created a single enterprise-wide human resources report and added a data disclaimer.   
 
+<p>Here we will automate that same report and generate 1 report for each of the 7 lines of business that report to the CEO.  One report for each leader who reports directly to the CEO. We will reuse much of the same code as before.  It would be a good idea to read through that post if you have not yet already. 
 
+<p>First, let's load our libraries, update our variables, and import our data.
 
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-    <div class="article-content">
-	
-	<p>If you work  exclusively with clean data that can be accessed and distributed freely without fear of legal action then (1) I envy you and (2) this read is probably not for you.
-
-	<p>I deal regularly with confidential and restricted data in a legal/regulatory environment. Data needs to be accurate and secure.  A robust disclaimer can go a long way in meeting those needs.
-
-	<p>In this post we are going to use the openxlsx package in R to create a simple Excel human resources report and add a data disclaimer.  You can find the R script here: <a href = "xxxx">xxxx</a>.
-
-	<h3 class="article-subtitle">Ever in Our Favor</h3>
-
-	<p>My team often distributes our data in Excel format.  If you are cringing, no worries, bear with me on this. Legal and regulatory reporting is better left bland. Excel/PDF/csv etc reports are more suitable for this type of work than say, a Tableau dashboard or Shiny app. 
-	
-	<p>The good news is we can actually turn this archaic Excel reporting practice in our favor.  We can use Excel's ability to have multiple tabs in one workbook to create a data disclaimer.  The disclaimer will accomplish two things: 
-	
-	<ol class="task-list">
-		<li><label>Clearly explain to our client how, if at all, s/he can distribute our data.</label></li>
-		<li><label>Help the client understand the data, mitigating risk and reducing the chance of confusion.</label></li>
-	</ol>
-
-	<p>I can't emphasize enough how critical it is to proactively clarify anything that might potentially confuse the client.  The disclaimer tab is the perfect opportunity to do so. The disclaimer tab can go a long way in avoiding confusion and - as a result - save time and money down the line.  We'll see an example of this shortly. 
-
-	<p>For this report, we'll say the legal team at an imaginary company wants to know what the company's job headcount and turnover looked like in 2009.  Let's begin with the R script.  First things first, let's load packages, create a report name/number for tracking as well as an as of date:
-
-	<pre class="R">
-library(tidyverse)
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">library(tidyverse)
 library(scales)
 library(openxlsx)
 
-as_of_date &#60;- Sys.Date()
-report_name &#60;- "PA73405 - Attrition by Job 2009"
+as_of_date &lt;- Sys.Date()
+report_name &lt;- "PA73405 - Attrition by Job 2009"
+
+deskhistory_table &lt;- read_csv("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/deskhistory_table.csv")
+deskjob_table &lt;- read_csv("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/deskjob_table.csv")
 	</pre>
+</div>
 
-	<h3 class="article-subtitle">Import Code</h3>
+<p>In the previous post, we were simply aggregating across the company. However, since we want to break this data out by line of business, we need to add hierarchy information that will tell us which employees are in each department.  To do this, we will import a new table called <code>hierarchy_spread</code>.
 
-	<p>Next, let's get our data which I have created for this imaginary organization.  You can use the code below to download "desk history" and "desk job" tables that can be used in conjunction to determine all the employees' movement information:
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">hierarchy_spread &lt;- read_csv("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/hierarchy_spread.csv")
+glimpse(hierarchy_spread, width = 70)
 
-	<pre class="R">
-deskhistory_table &#60;- read_csv("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/deskhistory_table.csv")
-deskjob_table &#60;- read_csv("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/deskjob_table.csv")
-</pre>
+Observations: 1,085
+Variables: 14
+$ lvl00_desk_id &lt;int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+$ lvl00_org     &lt;chr> "CEO", "CEO", "CEO", "CEO", "CEO", "CEO", "...
+$ lvl01_desk_id &lt;int> 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2...
+$ lvl01_org     &lt;chr> "Finance", "Finance", "Finance", "Finance",...
+$ lvl02_desk_id &lt;int> 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9...
+$ lvl02_org     &lt;chr> "Fnnc - Accounting", "Fnnc - Accounting", "...
+$ lvl03_desk_id &lt;int> 92, 92, 92, 92, 92, 92, 92, 93, 93, 93, 93,...
+$ lvl03_org     &lt;chr> "Fnnc - Accntng - PSI", "Fnnc - Accntng - P...
+$ desk_id       &lt;int> 179, 180, 181, 182, 183, 184, 185, 186, 187...
+$ org           &lt;chr> "Fnnc - Accntng - PSI - IC01", "Fnnc - Accn...
+$ state_flag    &lt;lgl> FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, F...
+$ state_present &lt;chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...
+$ job_name      &lt;chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...
+$ pct_of_lob    &lt;dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...</pre>
+</div>
 
-<p>deskhistory_table.  This data captures the start and end dates for each employee's job.  It also captures whether the job resulted in a termination.
-<pre class="R">
-knitr::kable(deskhistory_table[sample(nrow(deskhistory_table),5),])
-| employee_num| desk_id|desk_id_start_date |desk_id_end_date | termination_flag| promotion_flag|
-|------------:|-------:|:------------------|:----------------|----------------:|--------------:|
-|         8732|     910|1999-01-01         |2004-12-28       |                0|              0|
-|        14051|     999|1999-01-01         |2003-01-19       |                0|              0|
-|        45369|      35|1999-01-01         |2000-07-21       |                0|              0|
-|        45958|      38|1999-01-01         |2003-04-19       |                0|              0|
-|        24568|     701|1999-01-01         |2001-07-31       |                0|              0|
-</pre>
-<p>deskjob_table. This data associates each desk/position to a specific job.
-<pre class="R">
-knitr::kable(deskjob_table[sample(nrow(deskjob_table),5),])
-| desk_id|job_name                 |
-|-------:|:------------------------|
-|    1179|Product Manager          |
-|    1072|Developer                |
-|     451|Salesperson              |
-|     510|Salesperson              |
-|     330|Administrative Assistant |
-</pre>
-	<p>You'll notice both tables share a variable <code>desk_id</code>. You can think of it as the employee's unique desk number.  The <code>desk_id_start_date</code> and <code>desk_id_end_date</code> variables refer to the dates the employee was at that "desk".  If the employee switched to a new job somewhere else in the company they would likely switch to a new <code>desk_id</code>.  The <code>desk_id</code> is a critical key: from <code>desk_id</code> we can determine what job, location, manager, line of business, etc. belongs to the employee assigned to that <code>desk_id</code>.
+<p>As mentioned earlier, the original report we created was for the CEO (<code>lvl00_org</code>).  Here, we want to break out multiple reports for each department (<code>lvl01_org</code>).  Here are the names of these departments, along with a count of employee <code>desk_id</code>s:
 
-	<h3 class="article-subtitle">Summarize Data with Tidyverse</h3>
-
-	<p>Now that we have the raw data, let's use some standard dplyr/tidyr functions to join the two datasets and create a simple data frame that summarizes turnover and headcount by job.  
-
-	<pre class="r">
-hcto_summary &#60;- deskhistory_table %>% 
-  left_join(deskjob_table) %>% 
-  filter(desk_id_start_date &#60;= as.Date("2009-12-31"),
-         desk_id_end_date &#60;= as.Date("2009-01-01")) %>% 
-  arrange(desc(desk_id_end_date)) %>% 
-  group_by(employee_num) %>% 
-  filter(row_number() == 1) %>% 
-  ungroup() %>% 
-  mutate(year = "2009",
-         termination_flag = if_else(termination_flag == 1, "Terminated", "DidNotTerminate")) %>% 
-  count(job_name, termination_flag) %>% 
-  spread(termination_flag, n, fill = 0) %>% 
-  mutate(Headcount =  Terminated + DidNotTerminate,
-         TerminationRate = percent(Terminated / Headcount)) %>% 
-  arrange(desc(Terminated / Headcount))
-</pre>
-
-	<p>We are not going to focus much on this code, though I do want to call out one piece. We have to account for the fact that some employees would have switched jobs in 2009.  These employees would have multiple entries during that year, probably for different <code>desk_id</code>s. This is something we will call out on our disclaimer tab later on in order to avoid confusion down the line. 
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">hierarchy_spread %>% count(lvl01_org) %>% arrange(desc(n))
 	
-	<p>We only want to count each employee who was active in 2009 one time so we will count their most recent information for that year. To do so, we can sort the data with the  most recent <code>desk_id_end_date</code> and then <code>group_by(employee_num) %>% filter(row_number() == 1)</code> in order to select the most recent of those jobs.  This is a nifty trick I use a lot, and we will be sure to document it in the disclaimer.
+	# A tibble: 7 x 2
+  lvl01_org           n
+  &lt;chr>           &lt;int>
+1 Sales             579
+2 Technology        125
+3 Legal             102
+4 Finance            86
+5 Human Resources    79
+6 Marketing          63
+7 Strategy           51</pre>
+</div>
 
-	<p>Here is the output data that we want to send to the clients:
+<p>You can see Sales has the highest number of employees, followed by Technology.   
 
-	<pre class="r">
-knitr::kable(hcto_summary)
-|year |job_name                 | DidNotTerminate| Terminated| Headcount|TerminationRate |
-|:----|:------------------------|---------------:|----------:|---------:|:---------------|
-|2009 |Paralegal                |              13|          4|        17|23.5%           |
-|2009 |Department Leader        |              16|          3|        19|15.8%           |
-|2009 |Product Manager          |              51|          9|        60|15.0%           |
-|2009 |Analyst                  |              42|          7|        49|14.3%           |
-|2009 |Project Manager          |              45|          7|        52|13.5%           |
-|2009 |Consultant               |              55|          8|        63|12.7%           |
-|2009 |Regional Leader          |             102|         13|       115|11.3%           |
-|2009 |Developer                |              81|          9|        90|10.0%           |
-|2009 |Salesperson              |             315|         35|       350|10.0%           |
-|2009 |Attorney                 |              18|          1|        19|5.3%            |
-|2009 |Administrative Assistant |              55|          2|        57|3.5%            |
+	<h3 class="article-subtitle">Add Leaders</h3>
+
+<p>The <code>hierarchy_spread</code> table has one row for each individual contributor. Since we want to include data for every employee that reports to the CEO, we need to add rows for managers as well. There will be one report for each leader in level 1, which means we need to add rows for managers in levels 2 and 3.  The code below gets us there - it creates one data frame for the level 2 leaders, and data frame for the level 1 leaders.
+
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">hierarchy_spread_lvl02 &lt;- hierarchy_spread %>% 
+  select(lvl01_desk_id, lvl01_org, desk_id = lvl02_desk_id) %>% 
+  distinct()
+  
+hierarchy_spread_lvl03 &lt;- hierarchy_spread %>% 
+  select(lvl01_desk_id, lvl01_org, desk_id = lvl03_desk_id) %>% 
+  distinct()</pre>
+</div>
+
+<p>And then we'll simply append the tables together into a new table, <code>hierarchy_spread_all</code>.
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">hierarchy_spread_all &lt;- hierarchy_spread %>% 
+  bind_rows(hierarchy_spread_lvl02, hierarchy_spread_lvl03)
+  
+glimpse(hierarchy_spread_all,width = 70)
+
+Observations: 1,255
+Variables: 14
+$ lvl00_desk_id &lt;int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+$ lvl00_org     &lt;chr> "CEO", "CEO", "CEO", "CEO", "CEO", "CEO", "...
+$ lvl01_desk_id &lt;int> 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2...
+$ lvl01_org     &lt;chr> "Finance", "Finance", "Finance", "Finance",...
+$ lvl02_desk_id &lt;int> 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9...
+$ lvl02_org     &lt;chr> "Fnnc - Accounting", "Fnnc - Accounting", "...
+$ lvl03_desk_id &lt;int> 92, 92, 92, 92, 92, 92, 92, 93, 93, 93, 93,...
+$ lvl03_org     &lt;chr> "Fnnc - Accntng - PSI", "Fnnc - Accntng - P...
+$ desk_id       &lt;int> 179, 180, 181, 182, 183, 184, 185, 186, 187...
+$ org           &lt;chr> "Fnnc - Accntng - PSI - IC01", "Fnnc - Accn...
+$ state_flag    &lt;lgl> FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, F...
+$ state_present &lt;chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...
+$ job_name      &lt;chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...
+$ pct_of_lob    &lt;dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...</pre>
+</div>
+
+
+<p>Next, we'll join our raw data, <code>deskhistory_table</code>, to the hierarchy information we just created.  <code>deskhistory_table</code> captures the start and end dates for each employee's job. It also captures whether the job resulted in a termination. Each employee (<code>employee_num</code>) sits at a unique <code>desk_id</code>, which rolls up to one of the 7 lines of business.  
+###########start here
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">deskhistory_table_hierarchy &lt;- deskhistory_table %>% 
+  left_join(hierarchy_spread_all %>% select(lvl01_desk_id,
+                                        lvl01_org,
+                                        desk_id) %>% distinct(), by = "desk_id")
+
+glimpse(deskhistory_table_hierarchy[sample(1:nrow(deskhistory_table_hierarchy)),], width = 70)
+
+Observations: 4,724
+Variables: 8
+$ employee_num       &lt;int> 21684, 34068, 24507, 12504, 7549, 1386...
+$ desk_id            &lt;int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,...
+$ desk_id_start_date &lt;date> 1999-01-01, 1999-01-01, 1999-01-01, 1...
+$ desk_id_end_date   &lt;date> 2999-01-01, 2002-10-01, 2003-07-04, 2...
+$ termination_flag   &lt;int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...
+$ promotion_flag     &lt;int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...
+$ lvl01_desk_id      &lt;int> NA, NA, NA, NA, NA, NA, NA, NA, 2, 2, ...
+$ lvl01_org          &lt;chr> NA, NA, NA, NA, NA, NA, NA, NA, "Finan...</pre>
+</div>
+
+	<h3 class="article-subtitle">Use a loop</h3>
+
+<p>We'll use a loop to create one report for each LOB.  So one report for each <code>lvl01_org</code>.  (Alternately, you may want to use some sort of apply or map function.)
+
+<p>To start, let's create a data frame called <code>LOB_list</code> that has each of the 7 LOBs as well as the desk id for each LOB leader: <code>lvl01_desk_id</code>.  The plan is to loop through each row/LOB in this data frame and create a new report during each loop.
+
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">LOB_list &lt;- hierarchy_spread_all %>% 
+  select(lvl01_org, lvl01_desk_id) %>% 
+  distinct()
+LOB_list
+
+# A tibble: 7 x 2
+  lvl01_org       lvl01_desk_id
+  &lt;chr>                   &lt;int>
+1 Finance                     2
+2 Human Resources             3
+3 Sales                       4
+4 Marketing                   5
+5 Legal                       6
+6 Technology                  7
+7 Strategy                    8</pre>
+</div>
+
+<p>Now that we have something to loop through, we can start on the loop.
+
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">for (i in (1:length(LOB_list$lvl01_org))) {
 </pre>
+</div>
+<p>Note the variable <code>i</code> will start at 1 and increase each time we run through the loop until it reaches the last row (row 7 for Strategy) in <code>LOB_list</code>.  
 
-	<h3 class="article-subtitle">Data Disclaimer Tab</h3>
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">org_name &lt;- LOB_list$lvl01_org[i]</pre>
+</div>
 
-<p>With the retrieval and manipulation behind us, the data is almost ready to export. We are now at the data disclaimer piece. Before continuing, I need to mention this disclaimer is very basic and for demonstration purposes only.   <b>Always consult your legal team for approval of disclaimer verbiage</b>.
 
-<p>This disclaimer will include distribution information as well as information about how the data was pulled.  This is our shot to clarify the way we are counting employees (only count the most recent 2009 job). The client typically doesn't have time to think about these types of details, so making this clarification now will prepare your client for questions and potentially save you from urgent follow up scrambles that no one enjoys.
-
-<p>I have packaged this example's verbiage into a data frame:
-
-<pre class="r">
-disclaimer_info &#60;- data.frame(Information = 
-  c("Source: https://github.com/harryahlas/sample-hr-database/tree/master/data",
-    paste("Data as of", as_of_date, "."),
-    "Data includes all employees rolling up to CEO Tricia Avallone who were active at any point from Jan 1, 2009 through December 31, 2009.",
-    "If the employee had multiple jobs during 2009, only the most recent job is counted.",
-    "Data is confidential and should be shared on a need to know basis only.",
-    "Do not distribute externally.")) 
+<p>The code we are going to cycle through in each loop is nearly identical to our previous entry's enterprise-wide report.  The first addition is <code>filter(lvl01_org == LOB_list$lvl01_org[i]) %>%</code>.  In the code below, you can see this line filters the report for rows that roll up to the LOB that the loop is currently running through.
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">  hcto_summary &lt;- deskhistory_table_hierarchy %>% 
+    filter(lvl01_org == LOB_list$lvl01_org[i]) %>% # Added for this example
+    left_join(deskjob_table) %>% 
+    filter(desk_id_start_date &lt;= as.Date("2009-12-31"),
+           desk_id_end_date >= as.Date("2009-01-01")) %>% 
+    arrange(desc(desk_id_end_date)) %>% 
+    group_by(employee_num) %>% 
+    filter(row_number() == 1) %>% 
+    ungroup() %>% 
+    mutate(year = "2009",
+           termination_flag = if_else(termination_flag == 1, "Terminated", "DidNotTerminate")) %>% 
+    count(year, job_name, termination_flag) %>% 
+    spread(termination_flag, n, fill = 0) %>% 
+    mutate(Headcount =  Terminated + DidNotTerminate,
+           TerminationRate = percent(Terminated / Headcount)) %>% 
+    arrange(desc(Terminated / Headcount))
 </pre>
+</div>
 
-	<p>Note that the text is enclosed in a concatenation <code> c("xxx", "yyy", "zzz")</code>.  The openxlsx package will look for the commas between quotations and determine that words that come after the commas go into a new row in Excel.
+<p>Similarly, we have a single modification for the disclaimer, where we add <code>org_name</code> do clarify who the data is rolling up to.
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">  disclaimer_info &lt;-   data.frame(Information = 
+    c("Source: https://github.com/harryahlas/sample-hr-database/tree/master/data",
+      paste("Data as of", as_of_date, "."),
+      paste("Data includes all employees in", org_name ,"who were active at any point from Jan 1, 2009 through December 31, 2009."), # Added for this example
+      "If the employee had multiple jobs during 2009, only the most recent job is counted.",
+      "Data is confidential and should be shared on a need to know basis only.",
+      "Do not distribute externally."))</pre>
+</div>
 
-	<p>In some instances you may want to include a link to the source or your R script.  In this case we have the request number included in the name of the file, which is enough.
+<p>Finally, we close out the loop by creating an Excel workbook for each LOB.  Again, the only change is the addition of <code>org_name</code> in the output filename.  Also, we'll export to a folder called "output", so be sure to create that folder prior to running this script.
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">wb &lt;- createWorkbook()
+  addWorksheet(wb, report_name)
+  addWorksheet(wb, "Data Disclaimer")
+  writeDataTable(wb, 1, hcto_summary)
+  writeDataTable(wb, 2, disclaimer_info)
+  addStyle(wb, 2, style = createStyle(wrapText = TRUE), rows = 1:7, cols = 1)
+  setColWidths(wb, 2, 1, widths = 50)
+  saveWorkbook(wb, paste0("output/", report_name, " - ", org_name, " - ", as_of_date, ".xlsx"), TRUE) # New
+}
+</pre>
+</div>
+
+
 
 	
-	<h3 class="article-subtitle">Export to Excel</h3>
-
-	<p>I tend to favor the openxlsx package over others for exporting to Excel.  It seems less error prone because it is not dependent on Java.  With that, let's start by creating a new Excel workbook object <code>wb</code> and adding two tabs: the first for the data summary and the second for the disclaimer.
-
-<pre class="r">
-wb &#60;- createWorkbook()
-addWorksheet(wb, report_name)
-addWorksheet(wb, "Data Disclaimer")
-</pre>
-
-	<p>Now we can write our summary and disclaimer data frames to each sheet.  The numbers 1 and 2 below are the sheet numbers.
-
-	<pre class="r">
-writeDataTable(wb, 1, hcto_summary)
-writeDataTable(wb, 2, disclaimer_info)
-</pre>
-
-	<p>Next, let's add just a touch of formatting to sheet #2, our disclaimer tab.  Let's wrap the items in the first column and set the column width of the first row to 50 pixels.
-
-<pre class="r">
-addStyle(wb, 2, style = createStyle(wrapText = TRUE), rows = 1:7, cols = 1)
-setColWidths(wb, 2, 1, widths = 50)
-</pre>
-
-	<p>Last, we'll save the workbook with the report name and date and we are done!
-
-	<pre class="r">
-saveWorkbook(wb, paste0(report_name, as_of_date, ".xlsx"), TRUE)
-</pre>
-
-	<h3 class="article-subtitle">Final Thought - Why Automate?</h3>
-	
-	<p>For a one time report this may seem like a lot of work to add one tab with only 7 rows of text.  Why not just input the text directly into Excel?
-	
-	<p>I would agree this is overkill for one report.  However, there is a good chance that this code can be reused later.  It could be packaged into a function as well, depending on your need.
-	
-	<p>The value really rears its head when you start producing multiple reports - super handy!  That is something I will be tackling on a future post and look forward to sharing with you.  
-	
-	<p>Thanks for reading - I would appreciate any feedback.  <a href = "xxx">Here</a> is a link to the code.
+	<p>So there it is.  I use this type of automation often to meet client needs. It can save a ton of time!   Thanks for reading - I would appreciate any feedback.  <a href = "https://github.com/harryahlas/sample-hr-database/blob/master/analysis/automated_report_generation.R">Here</a> is a link to the code.
 	
 
     </div>
