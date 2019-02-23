@@ -27,7 +27,6 @@ for(blog_file in blog_files) {
 # (enter pw first)
 # Note: prior to reap, make sure new folders are created
 
-
 for (blog_file in blog_files_all) {
   print(blog_file)
   ftpUpload(blog_file, 
