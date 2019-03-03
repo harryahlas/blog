@@ -38,14 +38,15 @@
     <h1 class="article-title">Multi Condition Data Retrieval with R and SQL</h1>
 
     <span class="article-date">2019/03/09</span>
-One example I run into often in Human Resources analytics is when a client comes to me with a couple columns of data on an Excel file and asks to join my data to his/hers.  Usually the client's data has an employee number and a date.  
+
+	<p>One example I run into often in Human Resources analytics is when a client comes to me with a couple columns of data on an Excel file and asks to join my data to his/hers.  Usually the client's data has an employee number and a date.  
 
 <p>Often standard business intelligence data tools fail to meet the need and more flexible coding tools, such as R and SQL, come in handy.
 <p>Our Human Resources systems are built for simple queries with one condition that needs to be met. For example, a client may come to me with a list of employee numbers and ask to join some HR data. The BI tools work great for that. However, when an additional condition needs to be met, such as a list of dates, the BI tool often fails.  
 <p>image with excel and 1 column: easy
 <p>image with excel and 2 columns: hard
-<p>If the client needs 5 rows of data this is not a big issue and you can spend a few minutes creating 10 filters in the BI interface.  <p>But what if the client wants 100 rows? Or 1,000 or 100,000?  At that point I have another problem: my Oracle database limits me to 1,000 items per filter. Furthermore, these large queries tend to take a long time and can potentially time out. Yuck!
-<p></p> areturn to SQL.
+<p>If the client needs 5 rows of data this is not a big issue and you can spend a few minutes creating 10 filters in the BI interface.  <p>But what if the client wants 100 rows? Or 1,000 or 100,000?  At that point I have another problem: my Oracle database limits me to 1,000 items per filter. Furthermore, these large queries tend to take a long time and can potentially time out. Yuck!. Note: <a href = "xxx">Here</a> is more information about that issue.
+<p>areturn to SQL.
 <p>And what do you do when the SQL has limitations</p>
 Our systems do not allow us to create 
 Here is a solution 
@@ -62,10 +63,10 @@ Here is a solution
 What do you do when a client comes to you with a spreadsheet and asks you to supply
 	
 	<h3 class="article-subtitle">Client Data</h3>
-<p>We'll start with Excel to see what the client is looking for. <a href="xxx">Here is a link</a> to the file and here is a screengrab:</p>
+<p>We'll start with Excel to see the file the client has provided. <a href="xxx">Here is a link</a> to the file and here is a screengrab:</p>
 <img src="client_input.gif">
-<p>The client has privided us with a list of employee numbers (employee names are typically excluded from sensitive data) and dates and asked us to populate the <code>`Job Name`</code> field. So the client wants to know what job title - if any - the employee had on that date.
-<p>Let's move to R, load our libraries, and import our data using readxl. <b>Note: need to change excel to github raw</b>
+<p>The client has privided us with a list of employee numbers and dates and asked us to populate the <code>`Job Name`</code> field. So the client wants to know what job title - if any - the employee had on that date.
+<p>Let's move to R and and import our data using readxl. We'll load the other libraries we'll need as well. <b>Note: need to change excel to github raw</b>
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">library(RMariaDB)
@@ -76,16 +77,17 @@ library(readxl)
 input_data &lt;- read_xlsx("data/Johnson litigation research.xlsx")</pre>
 </div>
 
-<p>We will remove the <code>`Job Name`</code> field since it will be replaced.  Additionally, let's update the date field to a date format to help with joins later.
+<p>We can remove the <code>`Job Name`</code> field since it will be replaced.  Additionally, let's update the date field to a date format to help with joins later.
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">input_data &lt;- input_data %>% 
   select(-`Job Name`) %>% 
-  mutate(`Date of incident or notification` = as.Date(`Date of incident or notification`))</pre>
+  mutate(`Date of incident or notification` = 
+	as.Date(`Date of incident or notification`))</pre>
 </div>
 
 	<h3 class="article-subtitle">The HR Sample Database and Connecting to R</h3>
-<p>I have created a sample HR MySQL database, which you can read about and learn how to install on your machine, <a href="">here</a>.   You should be able to install MySQL and this database start to finish in about an hour.  MySQL is free as is the HR Sample database. 
+<p>We will pull the data from the HRSAMPLE MySQL databse I have created. Learn how to install on your machine <a href="">here</a>.   You should be able to install MySQL and this database start to finish in about an hour.
 
 <p>Use the <code>RMariaDB</code> package to connect to HRSAMPLE and take a look at the tables available.
 
@@ -102,15 +104,15 @@ dbListTables(HRSAMPLE)
 [5] "performancereview" "salaryhistory"</pre>
 </div>
 
-<p>To get the job information we will need to query two of these tables. The <code>deskhistory</code> table has a history of employee <code>desk_id</code> (positions) in the company. The <code>deskjob</code> table shows what jobs belong to each <code>desk_id</code>. 
+<p>The <code>deskhistory</code> and <code>desk_id</code> tables have what we need.  The <code>deskhistory</code> table has a history of employee <code>desk_id</code>s (positions) in the company. The <code>deskjob</code> table shows what jobs belong to each <code>desk_id</code>.  We can join the two tables to determine what job the employees had on any date.
 
-<h3 class="article-subtitle">Create an SQL Suery with Multiple Placeholders</h3>
+<h3 class="article-subtitle">Create a test SQL query</h3>
 
-<p>Below is a sample SQL script called mcdr_test.sql.  This script retrieves employee number 43349's job on December 5, 2003.  
+<p>Before building the final SQL query with placeholders, it is usually a good idea to create a short test script with hard coded conditions.  Test scripts are easier to debug and help ensure your query is solid. Below is a sample SQL script called mcdr_test.sql.  This script retrieves employee number 43349's job on December 5, 2003.  
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">SELECT
- '2003-12-05' AS "Date of incident or notification",
+ '<b>2003-12-05</b>' AS "Date of incident or notification",
  DH.employee_num,
  DH.desk_id,
  DJ.job_name
@@ -119,12 +121,12 @@ dbListTables(HRSAMPLE)
     `hrsample`.`deskjob` DJ  
  WHERE 
  DJ.desk_id = DH.desk_id
- AND DH.employee_num = 43349 
- AND DH.desk_id_start_date &lt;= DATE('2003-12-05') 
- AND DH.desk_id_end_date &lt;= DATE('2003-12-05') ;</pre>
+ AND DH.employee_num = <b>43349</b> 
+ AND DH.desk_id_start_date &lt;= DATE('<b>2003-12-05</b>') 
+ AND DH.desk_id_end_date &lt;= DATE('<b>2003-12-05</b>') ;</pre>
 </div>	
 
-<p>The script has been saved online <b>(needs to be saved)</b>and you can run it using the code below in R. You can see this employee was a Consultant on 12/5/2003.
+<p>The script has been saved online <b>(needs to be saved)</b>and you can run it using the code below in R. You can see  employee 43349 was a Consultant on 12/5/2003.
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">test_sql &lt;- read_file("scripts/mcdr_test.sql")
@@ -132,14 +134,18 @@ test_df &lt;- dbGetQuery(HRSAMPLE, test_sql)
 test_df
 
   Date of incident or notification employee_num desk_id   job_name
-1                       2003-12-05        43349     228 Consultant</pre>
+1                       2003-12-05        43349     228 <b>Consultant</b></pre>
 </div>		
+
+<h3 class="article-subtitle">Add Placeholders to the SQL</h3>
 	
-<p>Now that we have script that can pull one employee's data, we will add placeholders to the script for the two conditions that can change - <code>employee_num</code> and <code>Date of incident or notification</code>.  Let's replace <code>employee_num</code> with <code>%EMP_ID%</code>  and for <code>Date of incident or notification</code> let's use <code>%DATE_ID%</code>.  The new code with the placeholders looks like this:
+<p>Now that we have a functional script that works with one <code>employee_num</code>  and one and <code>Date of incident or notification</code>, we can scale the script by adding placeholders.  The placeholders can be replaced with the multiple conditions that the client has provided.
+
+<p>In this request, we have two conditions that can change: <code>employee_num</code> and <code>Date of incident or notification</code>.  Let's replace <code>employee_num</code> with <code>%EMP_ID%</code>  and for <code>Date of incident or notification</code> let's use <code>%DATE_ID%</code>.  The new code with the placeholders looks like this:
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">SELECT
- DATE('%DATE_ID%') AS "Date of incident or notification",
+ DATE('<b>%DATE_ID%</b>') AS "Date of incident or notification",
  DH.employee_num,
  DH.desk_id,
  DJ.job_name
@@ -148,13 +154,14 @@ test_df
     `hrsample`.`deskjob` DJ  
  WHERE 
  DJ.desk_id = DH.desk_id
- AND DH.employee_num = %EMP_ID% 
- AND DH.desk_id_start_date &lt;= DATE('%DATE_ID%') 
- AND DH.desk_id_end_date >= DATE('%DATE_ID%') ;</pre>
+ AND DH.employee_num = <b>%EMP_ID%</b> 
+ AND DH.desk_id_start_date &lt;= DATE('<b>%DATE_ID%</b>') 
+ AND DH.desk_id_end_date >= DATE('<b>%DATE_ID%</b>') ;</pre>
 </div>	
 
-<p>So now we have a script we can iterate through with different variables.  Note the % signs in the placeholders are not required.  
-<p>Let's do another test to make sure the script with the placeholders works. We'll use base R's <code>gsub</code> function to fill the placeholders with the client's data.
+<p>So we now have a script we can iterate through with different variables.  We can replace <code>%EMP_ID%</code> and <code>%DATE_ID%</code> with the data in each row of the client's worksheet. (Note the % signs in the placeholders are cosmetic and not required.)  
+
+<p>Before we iterate through the entire client spreadsheet, let's do a final test on one row of the client data to make sure the script with the placeholders works. We'll use base R's <code>gsub</code> function to fill the placeholders with the client's data.  For this example we'll subset row <code>[2]</code> of the data.
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content"># Import sql script with placeholders
@@ -179,35 +186,89 @@ df_one_row
 
 <p>The code is working and is ready to be run through the client data.	
 
-	<h3 class="article-subtitle">Iterate the SQL query through the client data</h3>
+	<h3 class="article-subtitle">Ready to Go - Let's Iterate</h3>
 	
-<p>To retrieve the data, we will create an empty data frame called <code>df</code>. As we cycle through the client data, we'll append our results to <code>df</code>.  
+<p>We will use a for loop to retrieve the data, one loop and retrieval for each row of client data.  This is not the fastest way to pull data (and certainly not the only way) but there are several advantages to this method that I will discuss at the end of this post.
 
-<p>A few notes you might be wondering about.  I often add a disconnect/reconnect snippet in order to prevent the database from timing out.  You won't face that issue here since it is a local machine.  Also, if you need to improve performance, you could paginate and do something like 1,000 rows at a time.  For my needs, the one at a time approach works and is easier to debug.
-	
-	
-	
-	
-<p>I wanted to speed up the process of uploading this website to the hosting server, as opposed to doing a lot of drag and drop to the ftp client.  It turned out to be super easy using R. If you need to do the same, the following code can help get you there. It will replace old files and directories and create new ones as needed.
-<p>Simply set your working directory to the root directory with the folders/files you want to upload.  Then replace your username, password, server name, and the root directory you want to update here: <code>sftp://User:Password@FTPServer/your_directory_name/</code> 
+<p>To start, we will create an empty data frame called <code>df</code>. As we cycle through the client data, we'll append our results to <code>df</code>.  
+
 
 <div class="scrollbox" tabindex="0">
- 	<pre class="scrollbox-content">library(RCurl)
-
-files_for_upload &lt;- list.files(getwd(), 
-                             full.names=F,
-                             recursive = TRUE)
-
-for (file_for_upload in files_for_upload) {
-  print(file_for_upload)
-  ftpUpload(file_for_upload, 
-            ftpUpload(file_for_upload, paste0("sftp://User:Password@FTPServer/your_directory_name/",
-				file_for_upload),
-            .opts = list(ftp.create.missing.dirs=TRUE)
-  )
-}  </pre>
+ 	<pre class="scrollbox-content">df &lt;- tibble()</pre>
 </div>
 
+<p>Next, we'll start our for loop.  Again, this will be one iteration per row. So <code>i</code> will be the same as the row number of the input data.
+
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">for (i in 1:nrow(input_data)) {</pre>
+</div>
+
+<p>Once we are in the for loop, we will repeat the same code we used in the previous test run, with three changes:
+
+<ul> 
+	<li>Add <code>[i]</code> to subset <code>input_data$`Employee Number`</code></li>	
+	<li>Add <code>[i]</code> to subset <code>input_data$`Date of incident or notification`</code></li>
+	<li>Save the retrieved data to a temporary data frame called <code>df_temp</code></li>
+</ul>
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">  # Replace placeholders with employee_num and date
+  mvdr_sql &lt;- mvdr_sql_placeholder %>% 
+    gsub(pattern = '%EMP_ID%',
+         replacement = input_data$`Employee Number`<b>[i]</b>,
+         x = .) %>% 
+    gsub(pattern = '%DATE_ID%',
+         replacement = input_data$`Date of incident or notification`<b>[i]</b>,
+         x = .)
+  
+  # Retrieve data to temporary table
+  <b>df_temp</b> &lt;- dbGetQuery(HRSAMPLE, mvdr_sql)</pre>
+</div>
+
+The last piece of the for loop will append the temporary data <code>df_temp</code> to the prior retrievals in <code>df</code>.
+
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">  # Append data to previous retrievals
+  df &lt;- bind_rows(df, df_temp)
+}</pre>
+</div>
+
+<p>Running the code above will create a data frame with the information the client needs.
+
+	<h3 class="article-subtitle">Export to Excel</h3>
+<p>To make things easy on the client, we'll make the output look as seamless as possible.  We'll export an Excel file that looks nearly identical to what the client provided.  We'll start with our <code>input_data</code> data frame and join it to the new data from our for loop.
+
+<p>Also, I am trying to add some realism to these examples and a couple of those pieces are demonstrated here. The client has asked for data that sometimes doesn't exist.  For example, they may ask for employee information on a date that the employee was not with the company.  Maybe the team member had terminated prior to that date. In those cases, our query retrieves NAs.  We'll use the <code>replace_na</code> to add context for those NAs:  <i>not with company at this time</i>.   We will even format the job name and employee number columns to match what was on the client's spreadsheet.
+
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">output &lt;- input_data %>% 
+  left_join(df %>% select(-desk_id),
+			by = c("Date of incident or notification", 
+			       "Employee Number" = "employee_num")) %>% 
+  replace_na(list(job_name = "not with company at this time")) %>% 
+  rename(`Job Name` = job_name)</pre>
+</div>
+
+<p>Last, we'll use <code>openxlsx</code> to export to Excel.  For this example we will export a single tab.  Normally, I would include a second disclaimer tab, which I strongly recommend and discuss in another blog post <a href="xxx">here</a>.
+
+
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">wb &lt;- createWorkbook()
+addWorksheet(wb, "HR data needed with output")
+writeDataTable(wb, 1, output)
+saveWorkbook(wb, "output/Johnson litigation research with job_name.xlsx", TRUE)</pre>
+</div>
+
+Here is the exported file:
+<img src="client_output.gif"><p>
+
+	<h3 class="article-subtitle">Final Thoughts</h3>
+
+<p>A few notes you might be wondering about.  I often add a disconnect/reconnect snippet in order to prevent the database from timing out.  You won't face that issue here since it is a local machine.  Also, if you need to improve performance, you could paginate and do something like 1,000 rows at a time.  For my needs, the one at a time approach works and is easier to debug.  Also answer why we are doing this, this example only has a few rows, why a single gigantic script won't work, timeouts etc
+
+	
+	
+	
+	
 
 
     </div>
@@ -229,27 +290,7 @@ for (file_for_upload in files_for_upload) {
         </ul>
       </footer>
 
-    </div>
-    
-
-
-<!--
-<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-
-
-
-<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/r.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/yaml.min.js"></script>
-<script>hljs.configure({languages: []}); hljs.initHighlightingOnLoad();</script>
-
-
-
-    
-<script src="/js/math-code.js"></script>
-<script async src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"></script>
--->
-
-    
+    </div>   
   </body>
 </html>
 
