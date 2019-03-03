@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Hugo 0.53" />
 
-<title>Harry Ahlas - Multi Condition Data Retrieval</title>
-<meta property="og:title" content="Harry Ahlas - Multi Condition Data Retrieval">
+<title>Harry Ahlas - Multi-Condition Data Retrieval</title>
+<meta property="og:title" content="Harry Ahlas - Multi-Condition Data Retrieval">
 
 <link href='http://earlydemise.com/blog/public/css/github.min.css' rel='stylesheet' type='text/css' />
 <link rel="stylesheet" href="http://earlydemise.com/blog/public/css/fonts.css" media="all">
@@ -34,15 +34,32 @@
 
 <main class="content" role="main">
   <article class="article">
-    <span class="article-duration">2 min read</span>
-    <h1 class="article-title">Multi Condition Data Retrieval with R and SQL</h1>
+    <span class="article-duration">20 min read</span>
+    <h1 class="article-title">Multi-Condition Data Retrieval</h1>
 
     <span class="article-date">2019/03/09</span>
 
-	<p>One example I run into often in Human Resources analytics is when a client comes to me with a couple columns of data on an Excel file and asks to join my data to his/hers.  Usually the client's data has an employee number and a date.  
+	<h3 class="article-subtitle">How to use R and SQL to Circumvent Technology Limitations on Large, Multi-Condition Queries</h3>
 
+	<p>Sometimes our standard business intelligence tools can fail if clients ask for data our tools are not structured to report on. One example I run into fairly often in Human Resources analytics is when a client asks for data about a long list of employees as of many distinct dates.  Often they'll come to me with an Excel file that has a couple columns of data - a list of employee numbers and a list of different dates.   They'll ask to join my data to theirs.  
+	
+<p>The environment I work in is well-equipped for simple queries where only one dynamic condition needs to be met. For instance, you can easily retrieve data for a list of employees as of a single, specific date.  In that case, the only condition that changes is the employee number.  The stock BI tools typically work fine here.
+
+<p>However, when multiple conditions need to be met, such as the example with multiple employees and multiple dates, limitations of standard BI tools can get in the way.
+BI drag-and-drop filters are built to handle one condition at a time (either a list of employee numbers or a list of dates, but not one list of employee number and date pairs)
+BI tools often have limitations around the number of items that you can filter for, typically 1,000
+
+<p>Furthermore, if a large data retrieval is needed, connections to the database may timeout  
+
+ simply cannot handle it.  There are several challenges that get in the way
+
+I have to turn to more flexible tools, such as R and SQL.
+
+ 
+ in that forFor example, a client may come to me with a list of employee numbers and ask to join some HR data. The BI tools work great for that. However, when an additional condition needs to be met, such as a list of dates, the BI tool often fails.  
 <p>Often standard business intelligence data tools fail to meet the need and more flexible coding tools, such as R and SQL, come in handy.
-<p>Our Human Resources systems are built for simple queries with one condition that needs to be met. For example, a client may come to me with a list of employee numbers and ask to join some HR data. The BI tools work great for that. However, when an additional condition needs to be met, such as a list of dates, the BI tool often fails.  
+
+<p>Before I get started, I want to be clear that this methodology is not for everyone.  Simply for situations like mine. ADDRESS FINAL THOUGHTS EXPLAINING WHY THIS WAY
 <p>image with excel and 1 column: easy
 <p>image with excel and 2 columns: hard
 <p>If the client needs 5 rows of data this is not a big issue and you can spend a few minutes creating 10 filters in the BI interface.  <p>But what if the client wants 100 rows? Or 1,000 or 100,000?  At that point I have another problem: my Oracle database limits me to 1,000 items per filter. Furthermore, these large queries tend to take a long time and can potentially time out. Yuck!. Note: <a href = "xxx">Here</a> is more information about that issue.
@@ -263,7 +280,17 @@ Here is the exported file:
 
 	<h3 class="article-subtitle">Final Thoughts</h3>
 
-<p>A few notes you might be wondering about.  I often add a disconnect/reconnect snippet in order to prevent the database from timing out.  You won't face that issue here since it is a local machine.  Also, if you need to improve performance, you could paginate and do something like 1,000 rows at a time.  For my needs, the one at a time approach works and is easier to debug.  Also answer why we are doing this, this example only has a few rows, why a single gigantic script won't work, timeouts etc
+<p>There are several different ways to approach a multi-condition query, so why did I choose this way? You may be wondering these questions:
+<ul> 
+	<li>"Why did Harry do it this way?"</li>
+	<li>"Why run one query per row?not build a single query en"</li>
+	<li>"Why not just make a single SQL query?"</li>
+	<li>"Why didn't Harry just create a temporary table on the server?"</li>
+</ul> 
+<p>All valid questions.
+
+Running 1 query per row is highly inefficient.  
+A few notes you might be wondering about.  I often add a disconnect/reconnect snippet in order to prevent the database from timing out.  You won't face that issue here since it is a local machine.  Also, if you need to improve performance, you could paginate and do something like 1,000 rows at a time.  For my needs, the one at a time approach works and is easier to debug.  Also answer why we are doing this, this example only has a few rows, why a single gigantic script won't work, timeouts etc
 
 	
 	
