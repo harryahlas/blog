@@ -41,33 +41,26 @@
 
 	<h3 class="article-subtitle">How to use R and SQL to Circumvent Technology Limitations on Large, Multi-Condition Queries</h3>
 
-	<p>Sometimes our standard business intelligence tools can fail if clients ask for data our tools are not structured to report on. One example I run into fairly often in Human Resources analytics is when a client asks for data about a long list of employees as of many distinct dates.  Often they'll come to me with an Excel file that has a couple columns of data - a list of employee numbers and a list of different dates.   They'll ask to join my data to theirs.  
+	<p>Sometimes our standard business intelligence tools can fail if clients ask for data the tools are not structured to report on. One example I run into fairly often in Human Resources analytics is when a client asks for data regarding a long list of employees on many distinct dates.  Often they'll come to me with an Excel file that has a couple columns of data - a list of employee numbers and a list of different dates.   They'll ask to join my data to theirs.  
 	
-<p>The environment I work in is well-equipped for simple queries where only one dynamic condition needs to be met. For instance, you can easily retrieve data for a list of employees as of a single, specific date.  In that case, the only condition that changes is the employee number.  The stock BI tools typically work fine here.
+<p>The environment I work in is well-equipped for simple queries where only one dynamic condition needs to be met. For instance, it is easy to retrieve data about a list of employees as of a single, specific date.  In that case, the only condition that changes is the employee number, like in the spreadsheet below.
 
-<p>However, when multiple conditions need to be met, such as the example with multiple employees and multiple dates, limitations of standard BI tools can get in the way.
-BI drag-and-drop filters are built to handle one condition at a time (either a list of employee numbers or a list of dates, but not one list of employee number and date pairs)
-BI tools often have limitations around the number of items that you can filter for, typically 1,000
+<p><img src="easy_retrieval.gif">
 
-<p>Furthermore, if a large data retrieval is needed, connections to the database may timeout  
+<p>The stock BI tools typically work fine in this scenario with one changing variable - employee number - and one static variable - date.  However, it is a different story when the data has two changing variables (notice the different dates below).
 
- simply cannot handle it.  There are several challenges that get in the way
+<p><img src="difficult_retrieval.gif">
 
-I have to turn to more flexible tools, such as R and SQL.
+<p>For scenarios where multiple conditions need to be met, such as multiple employees and multiple dates, limitations of standard BI tools can get in the way, especially for large data retrievals on the order of, say, 50,000 rows.  These are some of the challenges that you may face:
+<ul>
+	<li>BI drag-and-drop filters are built to handle one condition at a time (either a list of employee numbers or a list of dates, but not one list of employee number and date pairs)</li>
+	<li>BI tools often have limitations around the number of items that you can include in a filter, typically 1,000</li>
+	<li>Database connections may timeout</li>
+	<li>The ability to write temporary tables on the database may be restricted</li>
+</ul>
 
- 
- in that forFor example, a client may come to me with a list of employee numbers and ask to join some HR data. The BI tools work great for that. However, when an additional condition needs to be met, such as a list of dates, the BI tool often fails.  
-<p>Often standard business intelligence data tools fail to meet the need and more flexible coding tools, such as R and SQL, come in handy.
 
-<p>Before I get started, I want to be clear that this methodology is not for everyone.  Simply for situations like mine. ADDRESS FINAL THOUGHTS EXPLAINING WHY THIS WAY
-<p>image with excel and 1 column: easy
-<p>image with excel and 2 columns: hard
-<p>If the client needs 5 rows of data this is not a big issue and you can spend a few minutes creating 10 filters in the BI interface.  <p>But what if the client wants 100 rows? Or 1,000 or 100,000?  At that point I have another problem: my Oracle database limits me to 1,000 items per filter. Furthermore, these large queries tend to take a long time and can potentially time out. Yuck!. Note: <a href = "xxx">Here</a> is more information about that issue.
-<p>areturn to SQL.
-<p>And what do you do when the SQL has limitations</p>
-Our systems do not allow us to create 
-Here is a solution 
-<p>This post will </p>
+<p>In this post we will make multi-condition data retrieval easier by doing the following:</p>
 <ul class="task-list">
 	<li><label>Import client spreadsheet into R</label></li>
 	<li><label>Connect R to a sample MySQL database</label></li>
@@ -76,22 +69,31 @@ Here is a solution
 	<li><label>Export the updated file for the client</label></li>  
 </ul>
 
+<p>Before I share my solution, I want to be clear that the following methodology is not for everyone.  This process meets the need in my environment and I hope some of you will benefit from this post. 
 
-What do you do when a client comes to you with a spreadsheet and asks you to supply
+<p>The raw code is <a href="xxx">here</a>.</p>
+
+
 	
 	<h3 class="article-subtitle">Client Data</h3>
-<p>We'll start with Excel to see the file the client has provided. <a href="xxx">Here is a link</a> to the file and here is a screengrab:</p>
+<p>We'll start with Excel to see the file the client has provided. <a href="https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/JohnsonLitigationResearch.xlsx">Here is a link</a> to the file and here is a screengrab:</p>
 <img src="client_input.gif">
 <p>The client has privided us with a list of employee numbers and dates and asked us to populate the <code>`Job Name`</code> field. So the client wants to know what job title - if any - the employee had on that date.
-<p>Let's move to R and and import our data using readxl. We'll load the other libraries we'll need as well. <b>Note: need to change excel to github raw</b>
+<p>Let's move to R and and import our data using readxl. We'll load the other libraries we'll need as well. Since the data is stored on GitHub, we will use the httr package to download the file and write it to disk in a temp file prior to importing with readxl's <code>read_excel</code> function.
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">library(RMariaDB)
 library(tidyverse)
 library(openxlsx)
 library(readxl)
+library(httr)
 
-input_data &lt;- read_xlsx("data/Johnson litigation research.xlsx")</pre>
+temp_file &lt;- tempfile(fileext = ".xlsx")
+req &lt;- GET("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/JohnsonLitigationResearch.xlsx", 
+           # write result to disk
+           write_disk(path = temp_file))
+input_data &lt;- read_excel(temp_file)
+</pre>
 </div>
 
 <p>We can remove the <code>`Job Name`</code> field since it will be replaced.  Additionally, let's update the date field to a date format to help with joins later.
@@ -104,7 +106,7 @@ input_data &lt;- read_xlsx("data/Johnson litigation research.xlsx")</pre>
 </div>
 
 	<h3 class="article-subtitle">The HR Sample Database and Connecting to R</h3>
-<p>We will pull the data from the HRSAMPLE MySQL databse I have created. Learn how to install on your machine <a href="">here</a>.   You should be able to install MySQL and this database start to finish in about an hour.
+<p>We will pull the job name data from the HRSAMPLE MySQL database I have created. You can install MySQL and HRSAMPLE on your machine using the instructions <a href="">here</a> in around an hour.   
 
 <p>Use the <code>RMariaDB</code> package to connect to HRSAMPLE and take a look at the tables available.
 
@@ -125,7 +127,7 @@ dbListTables(HRSAMPLE)
 
 <h3 class="article-subtitle">Create a test SQL query</h3>
 
-<p>Before building the final SQL query with placeholders, it is usually a good idea to create a short test script with hard coded conditions.  Test scripts are easier to debug and help ensure your query is solid. Below is a sample SQL script called mcdr_test.sql.  This script retrieves employee number 43349's job on December 5, 2003.  
+<p>Before building our final SQL query, which will have some complexity due to the placeholders, it is usually a good idea to create a short test script with hard-coded conditions.  Test scripts are easier to debug and help ensure your query is solid. Below is a sample SQL script called mcdr_test.sql.  This script retrieves employee number 43349's job on December 5, 2003.  
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">SELECT
@@ -143,7 +145,7 @@ dbListTables(HRSAMPLE)
  AND DH.desk_id_end_date &lt;= DATE('<b>2003-12-05</b>') ;</pre>
 </div>	
 
-<p>The script has been saved online <b>(needs to be saved)</b>and you can run it using the code below in R. You can see  employee 43349 was a Consultant on 12/5/2003.
+<p>The script has been saved online <b>(code below needs to be updated with link to github)</b>and you can run it using the code below in R. You can see  employee 43349 was a Consultant on 12/5/2003.
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">test_sql &lt;- read_file("scripts/mcdr_test.sql")
@@ -158,7 +160,7 @@ test_df
 	
 <p>Now that we have a functional script that works with one <code>employee_num</code>  and one and <code>Date of incident or notification</code>, we can scale the script by adding placeholders.  The placeholders can be replaced with the multiple conditions that the client has provided.
 
-<p>In this request, we have two conditions that can change: <code>employee_num</code> and <code>Date of incident or notification</code>.  Let's replace <code>employee_num</code> with <code>%EMP_ID%</code>  and for <code>Date of incident or notification</code> let's use <code>%DATE_ID%</code>.  The new code with the placeholders looks like this:
+<p>In this request, we have two conditions that can change: <code>employee_num</code> and <code>Date of incident or notification</code>.  In our new SQL script, let's replace <code>employee_num</code> with <code>%EMP_ID%</code>  and for <code>Date of incident or notification</code> let's use <code>%DATE_ID%</code>.  The new code with the placeholders, which we'll save as mcdr.sql, looks like this:
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">SELECT
@@ -166,9 +168,9 @@ test_df
  DH.employee_num,
  DH.desk_id,
  DJ.job_name
- FROM 
+ FROM
 	`hrsample`.`deskhistory` DH, 
-    `hrsample`.`deskjob` DJ  
+	`hrsample`.`deskjob` DJ  
  WHERE 
  DJ.desk_id = DH.desk_id
  AND DH.employee_num = <b>%EMP_ID%</b> 
@@ -178,7 +180,7 @@ test_df
 
 <p>So we now have a script we can iterate through with different variables.  We can replace <code>%EMP_ID%</code> and <code>%DATE_ID%</code> with the data in each row of the client's worksheet. (Note the % signs in the placeholders are cosmetic and not required.)  
 
-<p>Before we iterate through the entire client spreadsheet, let's do a final test on one row of the client data to make sure the script with the placeholders works. We'll use base R's <code>gsub</code> function to fill the placeholders with the client's data.  For this example we'll subset row <code>[2]</code> of the data.
+<p>Before we iterate through the entire client spreadsheet, let's do a final test on one row of the client data to make sure the script with the placeholders works. We'll use base R's <code>gsub</code> function to fill the placeholders with the client's data.  For this example we'll subset row <code>[2]</code> of the data for the <code>replacement</code> arguments. <b>UPDATE CODE BELOW</b>
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content"># Import sql script with placeholders
@@ -198,7 +200,7 @@ df_one_row &lt;- dbGetQuery(HRSAMPLE, mvdr_sql)
 
 df_one_row
   Date of incident or notification employee_num desk_id        job_name
-1                       2007-05-20        15011      88 Regional Leader</pre>
+1                       2007-05-20        15011      88 <b>Regional Leader</b></pre>
 </div>	
 
 <p>The code is working and is ready to be run through the client data.	
@@ -241,7 +243,7 @@ df_one_row
   <b>df_temp</b> &lt;- dbGetQuery(HRSAMPLE, mvdr_sql)</pre>
 </div>
 
-The last piece of the for loop will append the temporary data <code>df_temp</code> to the prior retrievals in <code>df</code>.
+<p>The last piece of the for loop will append the temporary data <code>df_temp</code> to the prior retrievals in <code>df</code>.
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">  # Append data to previous retrievals
@@ -252,9 +254,9 @@ The last piece of the for loop will append the temporary data <code>df_temp</cod
 <p>Running the code above will create a data frame with the information the client needs.
 
 	<h3 class="article-subtitle">Export to Excel</h3>
-<p>To make things easy on the client, we'll make the output look as seamless as possible.  We'll export an Excel file that looks nearly identical to what the client provided.  We'll start with our <code>input_data</code> data frame and join it to the new data from our for loop.
+<p>To make things easy on the client, we'll make our process look as seamless as possible.  We'll export an Excel file that looks nearly identical to what the client provided.  We'll start with our <code>input_data</code> data frame and join it to the new data from our for loop.
 
-<p>Also, I am trying to add some realism to these examples and a couple of those pieces are demonstrated here. The client has asked for data that sometimes doesn't exist.  For example, they may ask for employee information on a date that the employee was not with the company.  Maybe the team member had terminated prior to that date. In those cases, our query retrieves NAs.  We'll use the <code>replace_na</code> to add context for those NAs:  <i>not with company at this time</i>.   We will even format the job name and employee number columns to match what was on the client's spreadsheet.
+<p>I should add I try to add some realism to these examples when I can and a couple of those pieces are on display here. The client has asked for data that may not exist.  They may ask for employee information on a date that the employee was not with the company.  Maybe the team member had terminated prior to that date. In those cases, our query retrieves NAs.  We'll use the <code>replace_na</code> to add context for those NAs:  <i>not with company at this time</i>.   We will even format the job name and employee number columns to match what was on the client's spreadsheet.
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">output &lt;- input_data %>% 
@@ -265,7 +267,7 @@ The last piece of the for loop will append the temporary data <code>df_temp</cod
   rename(`Job Name` = job_name)</pre>
 </div>
 
-<p>Last, we'll use <code>openxlsx</code> to export to Excel.  For this example we will export a single tab.  Normally, I would include a second disclaimer tab, which I strongly recommend and discuss in another blog post <a href="xxx">here</a>.
+<p>Last, we'll use <code>openxlsx</code> to export to Excel.  For this example we will export a single tab.  Normally, I would include a second disclaimer tab, which I strongly recommend and discuss in another blog post called <a href="http://earlydemise.com/blog/public/2019/02/16/information-security-tab/index.html">Use R to add a Data Disclaimer to an Excel Report</a>.
 
 
 <div class="scrollbox" tabindex="0">
