@@ -39,11 +39,11 @@
 
     <span class="article-date">2019/03/09</span>
 
-	<h3 class="article-subtitle">How to use R and SQL to Circumvent Technology Limitations on Large, Multi-Condition Queries</h3>
+	<h3 class="article-subtitle">How to use R and SQL to Circumvent Technology Limitations on Large Queries with 2 or more Conditions</h3>
 
 <p>Sometimes our standard business intelligence tools can fail when clients ask for data the tools are not built to retrieve. One example I run into fairly often in Human Resources analytics is when a client wants to know what employees were doing on specific dates.
 
-<p>Typically, clients come to us with a spreadsheet like the one below, where one condition changes - different employee numbers - but all the dates are the same.  
+<p>Typically, clients come to us with a spreadsheet like the one below, where one condition changes - different employee numbers - but the other columns do not change.  
 
 <p><div class="scrollbox" tabindex="0">
 		<pre class="scrollbox-content"><img src="easy_retrieval.gif"></pre>
@@ -51,17 +51,17 @@
 	
 In this case, if the client wants information about these employees on that date, such as their job titles, it's no problem, a very simple data pull.
 
-<p>However, on occasion the client will ask for information about different employees on <i>different</i> dates, like in this spreadsheet:
+<p>However, on occasion clients ask for information about different employees on <i>different</i> dates, like in this spreadsheet where the dates are different on each row:
 
 <p><div class="scrollbox" tabindex="0">
 		<pre class="scrollbox-content"><img src="difficult_retrieval.gif"></pre>
 	</div>
 
-Notice the dates are different now.  This second condition - multiple dates - adds a layer of complexity that our BI systems often cannot handle.  We are required to hand code each filter. Yuck! This limitation, as well as others, become glaring when clients ask for larger amounts data, say 50,000 rows. 
+Now we have two conditions that can change.  This second condition - multiple dates - adds a layer of complexity that our BI systems often cannot handle.  We are required to hand code each filter. Yuck! This limitation, as well as others, become glaring when clients ask for larger amounts data, say 50,000 rows. 
 
-<p>If you are interested, I have more information about these challenges and why I have chosen this solution <a href="multi-condition-data-retrieval-challenges.html">here</a>.
+<p>I have more information about these BI tool limitations and why I have chosen this solution <a href="multi-condition-data-retrieval-challenges.html" id="additional">here</a>.
 
-<p>In this post we will circumvent the limitations of our standard BI tools to make multi-condition data retrieval easier, taking the following steps:</p>
+<p>In this post we will circumvent the limitations of our standard BI tools to make multi-condition data retrieval easier. We will:</p>
 <ul class="task-list">
 	<li><label>Import a sample client spreadsheet into R</label></li>
 	<li><label>Connect R directly to the HR database</label></li>
@@ -72,7 +72,7 @@ Notice the dates are different now.  This second condition - multiple dates - ad
 
 <p>I want to be clear that the following methodology is not for everyone.  This process meets the need in my environment and I thought I would share in the hope that some of you will benefit from this information. 
 
-<p>The raw code is <a href="xxx">here</a>.</p>
+<p>The raw R script is <a href="https://github.com/harryahlas/sample-hr-database/blob/master/analysis/multi_condition_data_retrieval.R">here</a>.</p>
 
 
 	
@@ -83,7 +83,7 @@ Notice the dates are different now.  This second condition - multiple dates - ad
 	<pre class="scrollbox-content"><img src="client_input.gif"></pre>
 </div>
 
-<p>The client has privided us with a list of employee numbers and dates and asked us to populate the <code>`Job Name`</code> field. So the client wants to know what job title - if any - the employee had on that date.  Column C, <code>Role in incident</code>, is irrelevant to our data pull but the client wants us to include it in the final file we provide.
+<p>The client has privided us with a list of employee numbers and dates and asked us to populate the <code>`Job Name`</code> field. So the client wants to know what job title - if any - the employee had on some sort of incident or notification date.  Column C, <code>Role in incident</code>, is irrelevant to our data pull but the client wants us to include it in the final file we provide.
 <p>Let's move to R and and import our data using readxl. We'll load the other libraries we'll need as well. Since the sample client Excel file is stored on GitHub, we can use the httr package to download and write it to disk in a temp file.  Then we can import with readxl's <code>read_excel</code> function.
 
 <div class="scrollbox" tabindex="0">
@@ -111,7 +111,7 @@ input_data &lt;- read_excel(temp_file)
 </div>
 
 	<h3 class="article-subtitle">The HR Sample Database and Connecting to R</h3>
-<p>The job name data the client is interested in is available in the HRSAMPLE MySQL database I have created. You can install MySQL and the HRSAMPLE database on your machine using the instructions <a href="">here</a>.  It takes about an hour.   
+<p>The job title data the client is interested in is available in the HRSAMPLE MySQL database I have created. You can install MySQL and the HRSAMPLE database on your machine using the instructions <a href="">here</a>.  It takes about an hour.   
 
 <p>Use the <code>RMariaDB</code> package to connect to HRSAMPLE and take a look at the tables available.
 
@@ -128,11 +128,11 @@ dbListTables(HRSAMPLE)
 [5] "performancereview" "salaryhistory"</pre>
 </div>
 
-<p>The <code>deskhistory</code> and <code>desk_id</code> tables have what we need.  The <code>deskhistory</code> table has a history of employee positions (<code>desk_id</code>s) in the company. The <code>deskjob</code> table shows what job belongs to each <code>desk_id</code>.  We can join the two tables to determine what job the employees had on any date.
+<p>The <code>deskhistory</code> and <code>desk_id</code> tables have what we need.  The <code>deskhistory</code> table has a history of employee positions (<code>desk_id</code>s) in the company, showing who sat where at what time. The <code>deskjob</code> table shows what job belongs to each <code>desk_id</code>.  We can join the two tables to determine what job an employee had on any date.
 
 <h3 class="article-subtitle">Create a test SQL query</h3>
 
-<p>Before building our final SQL query, which will have some complexity due to the placeholders, it is usually a good idea to create a short test script with hard-coded conditions.  Test scripts are easier to debug and help ensure your query is solid. Below is a sample SQL script that retrieves employee number 43349's job on December 5, 2003.  
+<p>Our final SQL query will have some complexities.  Prior to creating our final query with placeholder variables, it is a good idea to create a short test script with hard-coded conditions.  Test scripts are easier to debug and help ensure your query is solid. Below is a sample SQL script that retrieves employee number 43349's job on December 5, 2003.  
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">SELECT
@@ -189,7 +189,7 @@ test_df
  AND DH.desk_id_end_date >= DATE('<b>%DATE_ID%</b>') ;</pre>
 </div>	
 
-<p>So we now have a script, <a href="https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/scripts/mcdr.sql">mcdr.sql</a>, that we can iterate through for each employee/date pair.  We can replace <code>%EMP_ID%</code> and <code>%DATE_ID%</code> with the data in each row of the client's worksheet. (Note the % signs in the placeholders are cosmetic and not required.)  
+<p>So we now have a script, <a href="https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/scripts/mcdr.sql">mcdr.sql</a>, that we can iterate through each employee/date pair the client has provided.  We can replace <code>%EMP_ID%</code> and <code>%DATE_ID%</code> with the data in each row of the client's worksheet. (Note the % signs in the placeholders are cosmetic and not required.)  
 
 <p>Before we iterate through the entire client spreadsheet, let's do a final test on one row of the client data to make sure the script with the placeholders works. Let's start by importing mcdr.sql.
 
@@ -219,11 +219,11 @@ df_one_row
 1                       2007-05-20        15011      88 <b>Regional Leader</b></pre>
 </div>	
 
-<p>The code is working and we are ready run through the client data.	
+<p>Great! The code is working and we are ready run through all the client data.	
 
 	<h3 class="article-subtitle">Ready to Go - Let's Iterate</h3>
 	
-<p>We will use a for loop to retrieve the data. So one loop and retrieval for each row of client data.  As I mentioned earlier, this is not the fastest way to pull data (and certainly not the only way) but it is a good hack to get around the system limitations that we can face.
+<p>We will use a for loop to retrieve the data. So one loop and retrieval for each row of client data.  As I mention in <a href="multi-condition-data-retrieval-challenges.html">my side post</a>, this is not the fastest way to pull data (and certainly not the only way) but it is a good hack to get around the system limitations that we can face.
 
 <p>To start, we will create an empty data frame called <code>df</code>. As we cycle through the client data, we'll append our results to <code>df</code>.  
 
