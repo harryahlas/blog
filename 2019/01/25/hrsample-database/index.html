@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.53" />
+
+<title>Harry Ahlas - Sample HR Database</title>
+<meta property="og:title" content="Harry Ahlas - Sample HR Database">
+
+<link href='/css/github.min.css' rel='stylesheet' type='text/css' />
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+  <a href="/index.html" class="nav-logo">
+    <img src="/images/harryconf.jpg"
+         width="50"
+         height="50"
+         alt="Logo">
+  </a>
+
+  <ul class="nav-links">
+	<li><a href="/about/index.html">About</a></li>
+    <li><a href="https://www.linkedin.com/in/harry-ahlas-b471b7137">LinkedIn</a></li>
+    <li><a href="https://twitter.com/harry_ahlas">Twitter</a></li>
+  </ul>
+</nav>
+      </header>
+
+<main class="content" role="main">
+  <article class="article">
+    <span class="article-duration">15 min read</span>
+    <h1 class="article-title">Sample HR Database</h1>
+
+    <span class="article-date">2019/01/25</span>
+
+
+<p>
+I want to let you know I have build a sample HR database
+I am really proud of this.
+It is a work in progress
+Why did I build it?
+	I feel like most online sample HR databases are too clean and simple. I wanted something dirty like the real world.  If everything was clean we would just use Tableau or BI
+	wanted something that could be accessed via sql database
+	Develop my skills in SQL
+How did I build it
+	see github
+	fully reproducible	
+Features
+	It comes in three forms - a MySQL database, an R package, and raw csvs
+	customizable parameters - you can specify names of LOBs, jobs, % of TMs in each etc
+I plan to update it regularly
+Right now it has job history, team member list, organizational hierarchy, perf reviews etc
+Future enhancements include
+	Changing jobs
+<pre class="r"><code>library(my_data)</code></pre>
+
+<p><div class="scrollbox" tabindex="0">
+		<pre class="scrollbox-content"><img src="easy_retrieval.gif"></pre>
+	</div>
+	
+<p>sldfjkdslfsdlkfj
+
+<p>In this post we will slkdfjl lksdfjkasld, taking the following steps:</p>
+<ul class="task-list">
+	<li><label>askfdlk sdlkf</label></li>
+	<li><label>lksjfi dfisifdks l</label></li>
+</ul>
+
+	
+	<h3 class="article-subtitle">Database</h3>
+<p>Use the <code>RMariaDB</code> package to connect to HRSAMPLE and take a look at the tables available.
+
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">HRSAMPLE &lt;- dbConnect(MariaDB(), 
+                      user='newuser', 
+                      password='newuser', 
+                      dbname='hrsample', 
+                      host='localhost')
+					  
+dbListTables(HRSAMPLE)
+[1] "deskhistory"       "deskjob"          
+[3] "employeeinfo"      "hierarchy"        
+[5] "performancereview" "salaryhistory"</pre>
+</div>
+
+<p>The <code>deskhistory</code> and <code>desk_id</code> tables have what we need.  The <code>deskhistory</code> table has a history of employee <code>desk_id</code>s (positions) in the company. The <code>deskjob</code> table shows what jobs belong to each <code>desk_id</code>.  We can join the two tables to determine what job the employees had on any date.
+
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <!--<li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>-->
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>   
+  </body>
+</html>
+
