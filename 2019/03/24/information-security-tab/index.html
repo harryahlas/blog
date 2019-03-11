@@ -9,17 +9,10 @@
 <title>Harry Ahlas - Data Disclaimer in R</title>
 <meta property="og:title" content="Harry Ahlas - Data Disclaimer">
 
-
-
-
 <link href='/css/github.min.css' rel='stylesheet' type='text/css' />
-
-
 
 <link rel="stylesheet" href="/css/fonts.css" media="all">
 <link rel="stylesheet" href="/css/main.css" media="all">
-
-
 
   </head>
   <body>
@@ -56,7 +49,7 @@
 
     <h1 class="article-title">Use R to add a Data Disclaimer to an Excel Report</h1>
 
-    <span class="article-date">2019/02/16</span>
+    <span class="article-date">3/24/2019</span>
     
 
     <div class="article-content">
@@ -65,7 +58,7 @@
 
 	<p>I deal regularly with confidential and restricted data in a legal/regulatory environment. Data needs to be accurate and secure.  A robust disclaimer can go a long way in meeting those needs.
 
-	<p>In this post we are going to use the openxlsx package in R to create a simple Excel human resources report and add a data disclaimer.  You can find the R script here: <a href = "xxxx">xxxx</a>.
+	<p>In this post we are going to use the openxlsx package in R to create a simple Excel human resources report and add a data disclaimer.  You can find the R script here: <a href = "https://github.com/harryahlas/sample-hr-database/blob/master/analysis/data_disclaimer_tab.R">https://github.com/harryahlas/sample-hr-database/blob/master/analysis/data_disclaimer_tab.R</a>.
 
 	<h3 class="article-subtitle">Ever in Our Favor</h3>
 
@@ -100,7 +93,7 @@ deskhistory_table &#60;- read_csv("https://raw.githubusercontent.com/harryahlas/
 deskjob_table &#60;- read_csv("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/deskjob_table.csv")
 </pre>
 
-<p>deskhistory_table.  This data captures the start and end dates for each employee's job.  It also captures whether the job resulted in a termination.
+<p><code>deskhistory_table</code>.  This data captures the start and end dates for each employee's job.  It also captures whether the job resulted in a termination.
 <pre class="R">
 knitr::kable(deskhistory_table[sample(nrow(deskhistory_table),5),])
 | employee_num| desk_id|desk_id_start_date |desk_id_end_date | termination_flag| promotion_flag|
@@ -111,7 +104,7 @@ knitr::kable(deskhistory_table[sample(nrow(deskhistory_table),5),])
 |        45958|      38|1999-01-01         |2003-04-19       |                0|              0|
 |        24568|     701|1999-01-01         |2001-07-31       |                0|              0|
 </pre>
-<p>deskjob_table. This data associates each desk/position to a specific job.
+<p><code>deskjob_table</code>. This data associates each desk/position to a specific job.
 <pre class="R">
 knitr::kable(deskjob_table[sample(nrow(deskjob_table),5),])
 | desk_id|job_name                 |
@@ -230,7 +223,7 @@ saveWorkbook(wb, paste0(report_name, as_of_date, ".xlsx"), TRUE)
 	
 	<p>The value really rears its head when you start producing multiple reports - super handy!  That is something I will be tackling on a future post and look forward to sharing with you.  
 	
-	<p>Thanks for reading - I would appreciate any feedback.  <a href = "xxx">Here</a> is a link to the code.
+	<p>Thanks for reading - I would appreciate any feedback.  <a href = "https://github.com/harryahlas/sample-hr-database/blob/master/analysis/data_disclaimer_tab.R">Here</a> is a link to the code.
 	
 
     </div>
