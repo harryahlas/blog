@@ -34,21 +34,23 @@
 
 <main class="content" role="main">
   <article class="article">
-    <span class="article-duration">15 min read</span>
+    <span class="article-duration">10 min read</span>
     <h1 class="article-title">The <i>hrsample</i> Package and Database</h1>
 
     <span class="article-date">3/17/2019</span>
 
 
-<p>I am excited to announce the initial release of <b>hrsample</b>, a fictitious human resources database!  Though still a work in progress, I am very proud to be able to share it with you.
+<p>I am excited to announce the initial release of <i>hrsample</i>, a fictitious human resources database!  Though still a work in progress, I am very proud to be able to share this evolving project with you.
 
 <p>Why build an HR database?  Several reasons.  Primarily, I feel like the online sample HR databases I have seen tend to be clean and simple.  If systems were designed perfectly and data was always clean, then all we would need is a single business intelligence tool for this work and I might be out of a job. Real world data is usually much more messy.
 
-<p>With hrsample I wanted something more like the real world.  Instead of a single spreadsheet with all the information you might need, I opted for multiple tables with many NAs.
+<p>With <i>hrsample</i> I wanted to create something more like the real world.  Instead of a single spreadsheet with all the information you might need, I opted for multiple tables with missing/incomplete data.
 
-<p>Also, I wanted my own database that I can use to help illustrate examples with both R and SQL.  I figure using one central data source will bring some consistency to the exercises I present here.  For this reason, hrsample comes in multiple formats: an R package and a MySQL database.  
+<p>Also, I wanted my own database that I can use to help illustrate examples with both R and SQL in future blog posts.  I figure using one central data source will bring some consistency to the exercises I present here.  For this reason, <i>hrsample</i> comes in multiple formats: an R package and a MySQL database.  
 
-<p>And of course I wanted something I could control.  Say I want to do an analysis on some of the data, I have the ability to make changes to the database.  For example, I can create teams with high turnover and poor performance to help with an analysis on good managers vs. bad managers.  So this database will evolve with time.
+<p>And of course I wanted something I could control.  Say I want to do an analysis on some of the data, I have the ability to make changes to the database.  For example, I can create teams with high turnover and poor performance to help with an analysis on good managers vs. bad managers.  So expect that this database will evolve with time and the data will change.
+
+<p>I want to emphasize that the data in hrsample will change with time.  Right now it is built more for data wrangling than for analytics.  With time I intend to add nuggets to the data that analytics can uncover.
 
 <p>This database is fully reproducible.  You can refer to the code on GitHub to see how I built it.  
 <a href="https://github.com/harryahlas/sample-hr-database">https://github.com/harryahlas/sample-hr-database</a>
@@ -56,9 +58,9 @@
 <p>Additionally, you can modify the parameters and input files to your taste and create your own HR database using this code!
 
 
-    <h2 class="article-subtitle">How to Install the hrsample Package for R</h1>
+    <h2 class="article-subtitle">How to Install the <i>hrsample</i> Package for R</h1>
 
-<p>Use the code below to install hrsample from GitHub.   The code below will install and load all the tables in the database. 
+<p>Use the code below to install <i>hrsample</i> from GitHub.   The code below will install and load all the tables in the database. The <i>devtools</i> package is required.
 	
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">devtools::install_github("harryahlas/hrsample")
@@ -73,18 +75,18 @@ library(hrsample)</pre></div>
 	<li><code>performancereview_table</code> - a history of employee performance review scores</li>
 	<li><code>salaryhistory_table</code> - a history of employee salaries</li>
 </ul>
-    <h2 class="article-subtitle" id="mysql">How to Install the hrsample MySQL Database</h1>
+    <h2 class="article-subtitle" id="mysql">How to Install the <i>hrsample</i> MySQL Database</h1>
 
 
-<p>Some of my examples will require you to access hrsample via a MySQL database. 
+<p>Some of my examples in future posts will require you to access <i>hrsample</i> via a MySQL database. 
 <p><a href="https://twitter.com/jeffblackadar?lang=en">Jeff Blackadar</a> has an <a href="https://programminghistorian.org/en/lessons/getting-started-with-mysql-using-r#downloading-and-installing-mysql">excellent tutorial</a> on how to set up MySQL and MySQL Workbench on your machine and connect via R.  It takes around an hour and it was a gamechanger for me.  I can't recommend this tutorial enough!
 
-<p>Once you have MySQL Workbench set up locally, it is easy to import hrsample to your local machine.  
+<p>Once you have MySQL Workbench set up locally, it is easy to import <i>hrsample</i> to your local machine.  
 
 <ol>
 	<li>First, copy the SQL files in this folder: <a href="https://github.com/harryahlas/sample-hr-database/tree/master/data/MySQLdump">https://github.com/harryahlas/sample-hr-database/tree/master/data/MySQLdump</a>.  (You may want to use <a href="https://kinolien.github.io/gitzip/">GitZip</a> for this.  You can paste this URL into the GitZip textbox and click "Download").</li> 
 	<li>Paste the files to a folder on your local machine.</li>
-	<li>Open MySQL Workbench.</li>
+	<li>Open MySQL Workbench and, if necessary, create a new local connection.</li>
 	<li>In the Navigator window, on the Administration tab, click Data Import/Restore.</li>
 	<li>Follow the instructions to import the folder from your local machine.</li>
 </ol>
@@ -94,14 +96,14 @@ library(hrsample)</pre></div>
 	</div>
 
 
-<p>The tables in the hrsample MySQL database are virtually identical to the data frames in the hrsample R package.  The only difference is the table names - the R data frames have a "_table" suffix. Please also note in these examples I have set the username and password as: <code>user='newuser', password='newuser'</code>.
+<p>The tables in the <i>hrsample</i> MySQL database are virtually identical to the data frames in the <i>hrsample</i> R package.  The only difference is the table names - the R data frames have a "_table" suffix. Please also note in these examples I have set the username and password as: <code>user='newuser', password='newuser'</code>.
 
     <h2 class="article-subtitle">The Build</h1>
 
-<p>If you are interested in seeing how I built this, or if you have suggestions how to improve, or if you want to build your own database like hrsample, please visit the hrsample development repository, <a href="https://github.com/harryahlas/sample-hr-database/">https://github.com/harryahlas/sample-hr-database/</a>.  There are customizable parameters that you can specify - names of lines of businesses, jobs, employee distributions, and the like.
+<p>If you are interested in seeing how I built this, or if you have suggestions how to improve, or if you want to build your own database like <i>hrsample</i>, please visit the <i>hrsample</i> development repository, <a href="https://github.com/harryahlas/sample-hr-database/">https://github.com/harryahlas/sample-hr-database/</a>.  There are customizable parameters that you can specify - names of lines of businesses, jobs, employee distributions, and the like.
 
     <h2 class="article-subtitle">The Data</h1>
-<p>I am not go into too much depth about the data here as I will save a lot of it for the exercises.  Here are a few graphics that show some of the data points available in the data set.  I have also included an EER diagram that shows the fields and relationships.
+<p>I am not going to go into too much depth about the data here as I will save a lot of it for the exercises.  Here are a few graphics that show some of the data points available in the data set.  I have also included an EER diagram that shows the fields and relationships.
 
 
 
@@ -126,7 +128,7 @@ library(hrsample)</pre></div>
 	</div>
 
     <h2 class="article-subtitle">Until Next Time</h1>
-<p>Stay tuned for more on hrsample. I'll have some reporting examples in coming weeks.  I would love to hear your thoughts, and questions on this work. Remember, it is a work in progress so your feedback is valuable and impactful.	Please don't hesitate to reach out via <a href="https://twitter.com/harry_ahlas">Twitter</a>!
+<p>Stay tuned for more on <i>hrsample</i>. I'll have some reporting examples in coming weeks.  I would love to hear your thoughts and questions on this work. Remember, it is a work in progress so your feedback is valuable and impactful.	Please don't hesitate to reach out via <a href="https://twitter.com/harry_ahlas">Twitter</a>!
     </div>
   </article>
 
