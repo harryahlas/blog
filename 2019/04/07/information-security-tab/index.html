@@ -68,7 +68,7 @@
 
 	<h3 class="article-subtitle">Ever in Our Favor</h3>
 
-	<p>My team often distributes our data in Excel format.  If you are cringing, no worries, bear with me. Legal and regulatory reporting is often better left vanilla. Excel/PDF/csv etc reports are more suitable for this type of work than say, a dynamic Tableau dashboard or Shiny app. 
+	<p>My team often distributes our data in Excel format.  If you are cringing, no worries, bear with me. Legal and regulatory reporting is often better left vanilla. Excel/PDF/csv etc reports are more suitable for this type of work than, say, a dynamic Tableau dashboard or Shiny app. 
 	
 	<p>The good news is we can turn this archaic Excel reporting practice in our favor.  We can leverage Excel's ability to have multiple tabs in one workbook to create a data disclaimer.  The disclaimer will accomplish two things: 
 	
@@ -85,7 +85,8 @@
 	
 	<p>Let's begin with the R script.  First things first, let's load packages, create a report name/number for tracking as well as an as of date:
 
-	<pre class="R">
+	<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">
 library(hrsample)
 library(tidyverse)
 library(scales)
@@ -93,7 +94,7 @@ library(lubridate)
 library(openxlsx)
 
 report_name &#60;- "PA73405 - Attrition by Job 2009"
-as_of_date &#60;- Sys.Date()</pre>
+as_of_date &#60;- Sys.Date()</pre></div>
 
 
 	<p>Next, let's take a closer look at our data from <em>hrsample</em>.  There are two key tables we are interested in here. We can use <code>deskjob_table</code> and <code>deskhistory_table</code> in conjunction to determine all the employees' movement information.
@@ -104,67 +105,72 @@ deskjob_table &#60;- read_csv("https://raw.githubusercontent.com/harryahlas/samp
 </pre> -->
 
 <p><code>deskjob_table</code> - this data associates each desk/position to a specific job.
-<pre class="R">
-knitr::kable(deskjob_table[sample(nrow(deskjob_table),5),])
+<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">knitr::kable(deskjob_table[sample(nrow(deskjob_table),5),])
 |     | desk_id|job_name    |
 |:----|-------:|:-----------|
 |777  |     777|Salesperson |
 |1039 |    1039|Analyst     |
 |423  |     423|Salesperson |
 |503  |     503|Salesperson |
-|1123 |    1123|Developer   |
-</pre>
+|1123 |    1123|Developer   |</pre></div>
 
 <p><code>deskhistory_table</code> - this data captures the start and end dates for each employee's job.  It also captures whether the job resulted in a termination and if the job came as the result of a promotion.
-<pre class="R">
-knitr::kable(deskhistory_table[sample(nrow(deskhistory_table),5),])
+<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">knitr::kable(deskhistory_table[sample(nrow(deskhistory_table),5),])
 |      | employee_num| desk_id|desk_id_start_date |desk_id_end_date | termination_flag| promotion_flag|
 |:-----|------------:|-------:|:------------------|:----------------|----------------:|--------------:|
 |687   |        27083|     687|1999-01-01         |2000-05-11       |                0|              0|
 |10015 |        22657|     677|2018-12-14         |2999-01-01       |                1|              1|
 |1327  |        36399|     888|2000-03-17         |2002-10-06       |                1|              1|
 |6431  |        18508|    1069|2011-06-20         |2012-12-19       |                0|              0|
-|4962  |        24300|     424|2008-02-23         |2013-05-17       |                1|              0|
-</pre>
+|4962  |        24300|     424|2008-02-23         |2013-05-17       |                1|              0|</pre></div>
+
 	<p>You'll notice both tables share a variable <code>desk_id</code>. You can think of <code>desk_id</code> as the employee's unique desk number.  The <code>desk_id_start_date</code> and <code>desk_id_end_date</code> variables refer to the dates the employee was at that "desk".  If the employee switched to a new job somewhere else in the company they would likely switch to a new <code>desk_id</code>.  The <code>desk_id</code> is a critical key: from <code>desk_id</code> we can determine what job, location, manager, line of business, etc. belongs to the employee assigned to that <code>desk_id</code>.
 
 	<h3 class="article-subtitle">Summarize Data with Tidyverse</h3>
 
 	<p>Now that we have the raw data, let's use some standard dplyr/tidyr functions to join the two datasets and create a simple data frame that summarizes turnover and headcount by job.   First, we will create a new object called <code>hcto_summary</code> (headcount/turnover summary) by joining our two tables. The default join will be on <code>desk_id</code>.  
-	<pre class="r">hcto_summary &#60;- deskhistory_table %>% 
-  left_join(deskjob_table) %>%</pre>
+	
+	<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">hcto_summary &#60;- deskhistory_table %>% 
+  left_join(deskjob_table) %>%</pre></div>
 	
 	<p>Next, we'll filter for all rows that have data for 2009.
-	<pre class="r">  filter(desk_id_start_date &lt;= as.Date("2009-12-31"),
-         desk_id_end_date &gt;= as.Date("2009-01-01")) %>%</pre>
+	<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">  filter(desk_id_start_date &lt;= as.Date("2009-12-31"),
+         desk_id_end_date &gt;= as.Date("2009-01-01")) %>%</pre></div>
 
 	<p>Some employees will have multiple jobs in 2009.  Since we only want to count each employee once, let's take their most recent job for this report. We have to account for the fact that some employees would have switched jobs in 2009.  These employees would have multiple entries during that year, probably for different <code>desk_id</code>s. This is something we will call out on our disclaimer tab later on in order to avoid confusion down the line. 
 	
-	<p>We only want to count each employee who was active in 2009 one time so we will count their most recent information for that year. To do so, we can sort the data with the  most recent <code>desk_id_end_date</code> and then <code>group_by(employee_num) %>% filter(row_number() == 1)</code> in order to select the most recent of those jobs.  This is a nifty trick I use a lot, and we will be sure to document it in the disclaimer.
+	<p>In order to count the most recent job for each employee who was active in 2009, we can sort the data with the  most recent <code>desk_id_end_date</code> and then <code>group_by(employee_num) %>% filter(row_number() == 1)</code> in order to select the most recent of those jobs.  This is a nifty trick I use a lot, and we will be sure to document it in the disclaimer.
 
-	<pre class="r">  arrange(desc(desk_id_end_date)) %>% 
+	<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">  arrange(desc(desk_id_end_date)) %>% 
   group_by(employee_num) %>% 
   filter(row_number() == 1) %>% 
-  ungroup() %>%</pre>	
+  ungroup() %>%</pre></div>
 
-	<p>Next, we'll clean up some of the variables and names to make the data easier for the end user to digest.  Here we will also calculate our key metric: if and employee's last day in a desk (<code>desk_id_end_date</code>) was in 2009 and they terminated, then they will be flagged as a termination.
- 	<pre class="r">  mutate(year = "2009",
+	<p>Next, we'll clean up some of the variables and names to make the data easier for the end user to digest.  Here we will also calculate our key metric: if an employee's last day in a desk (<code>desk_id_end_date</code>) was in 2009 and they terminated, then they will be flagged as a termination.
+ 	<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">  mutate(year = "2009",
          termination_flag = if_else(termination_flag == 1 & year(desk_id_end_date) == 2009, 
                                     "Terminated", 
-                                    "DidNotTerminate")) %>% </pre> 
+                                    "DidNotTerminate")) %>% </pre></div>
 
    <p>The last piece is some wrangling, starting with a count of jobs separating out terminations.  The <code>spread</code> function will pivot the data so there is a column for <code>Terminated</code> and a column for <code>DidNotTerminate</code>.  We'll also calculate total <code>Headcount</code> and <code>TerminationRate</code> columns.
 
-	<pre class="r">  count(job_name, termination_flag) %>% 
+	<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">  count(job_name, termination_flag) %>% 
   spread(termination_flag, n, fill = 0) %>% 
   mutate(Headcount =  Terminated + DidNotTerminate,
          TerminationRate = percent(Terminated / Headcount)) %>% 
-  arrange(desc(Terminated / Headcount))</pre>
+  arrange(desc(Terminated / Headcount))</pre></div>
 
 	<p>Please note <code>spread</code> will be replaced with <code>pivot_wide</code> in the near future!
 	<p>Here is all the code together. I love <em>tidyverse</em>.
-	<pre class="r">
-hcto_summary &#60;- deskhistory_table %>% 
+	<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">hcto_summary &#60;- deskhistory_table %>% 
   left_join(deskjob_table) %>% 
   filter(desk_id_start_date &lt;= as.Date("2009-12-31"),
          desk_id_end_date &gt;= as.Date("2009-01-01")) %>% 
@@ -180,13 +186,12 @@ hcto_summary &#60;- deskhistory_table %>%
   spread(termination_flag, n, fill = 0) %>% 
   mutate(Headcount =  Terminated + DidNotTerminate,
          TerminationRate = percent(Terminated / Headcount)) %>% 
-  arrange(desc(Terminated / Headcount))
-</pre>
+  arrange(desc(Terminated / Headcount))</pre></div>
 
 	<p>Here is the output data that we want to send to the clients:
 
-	<pre class="r">
-knitr::kable(hcto_summary)
+	<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">knitr::kable(hcto_summary)
 |year |job_name          | DidNotTerminate| Terminated| Headcount|TerminationRate |
 |:----|:-----------------|---------------:|----------:|---------:|:---------------|
 |2009 |Paralegal         |              18|          5|        23|21.7%           |
@@ -200,8 +205,7 @@ knitr::kable(hcto_summary)
 |2009 |Analyst           |              72|          9|        81|11.1%           |
 |2009 |Developer         |             115|         13|       128|10.2%           |
 |2009 |Business Leader   |               7|          0|         7|0.0%            |
-|2009 |CEO               |               1|          0|         1|0.0%            |
-</pre>
+|2009 |CEO               |               1|          0|         1|0.0%            |</pre></div>
 
 	<h3 class="article-subtitle">Data Disclaimer Tab</h3>
 
@@ -211,50 +215,42 @@ knitr::kable(hcto_summary)
 
 <p>I have packaged this example's verbiage into a data frame:
 
-<pre class="r">
-disclaimer_info &#60;- data.frame(Information = 
+<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">disclaimer_info &#60;- data.frame(Information = 
   c("Source: hrsample",
     paste("Data as of", as_of_date, "."),
     "Data includes all employees rolling up to CEO Danica Hammel who were active at any point from Jan 1, 2009 through December 31, 2009.",
     "If the employee had multiple jobs during 2009, only the most recent job is counted.",
     "Data is confidential and should be shared on a need to know basis only.",
-    "Do not distribute externally.")) 
-</pre>
+    "Do not distribute externally."))</pre></div>
 
 	<p>Note that the text is enclosed in a concatenation <code> c("xxx", "yyy", "zzz")</code>.  The <em>openxlsx</em> package will look for the commas between quotations and determine that words that come after the commas go into a new row in Excel.
 
-	<p>In some instances you may want to include a link to the source or your R script.  In this case we have the request number included in the name of the file, which is enough.
-
-	
 	<h3 class="article-subtitle">Export to Excel</h3>
 
 	<p>I tend to favor the <em>openxlsx</em> package over others for exporting to Excel.  It seems less error prone because it is not dependent on Java.  With that, let's start by creating a new Excel workbook object <code>wb</code> and adding two tabs: the first for the data summary and the second for the disclaimer.
 
-<pre class="r">
-wb &#60;- createWorkbook()
+<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">wb &#60;- createWorkbook()
 addWorksheet(wb, report_name)
-addWorksheet(wb, "Data Disclaimer")
-</pre>
+addWorksheet(wb, "Data Disclaimer")</pre></div>
 
 	<p>Now we can write our summary and disclaimer data frames to each sheet.  The numbers 1 and 2 below are the sheet numbers.
 
-	<pre class="r">
-writeDataTable(wb, 1, hcto_summary)
-writeDataTable(wb, 2, disclaimer_info)
-</pre>
+	<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">writeDataTable(wb, 1, hcto_summary)
+writeDataTable(wb, 2, disclaimer_info)</pre></div>
 
 	<p>Next, let's add just a touch of formatting to sheet #2, our disclaimer tab.  Let's wrap the items in the first column and set the column width of the first row to 50 pixels.
 
-<pre class="r">
-addStyle(wb, 2, style = createStyle(wrapText = TRUE), rows = 1:7, cols = 1)
-setColWidths(wb, 2, 1, widths = 50)
-</pre>
+<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">addStyle(wb, 2, style = createStyle(wrapText = TRUE), rows = 1:7, cols = 1)
+setColWidths(wb, 2, 1, widths = 50)</pre></div>
 
 	<p>Last, we'll save the workbook with the report name and date and we are done!
 
-	<pre class="r">
-saveWorkbook(wb, paste0(report_name, as_of_date, ".xlsx"), TRUE)
-</pre>
+	<p><div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+		<pre class="scrollbox-content">saveWorkbook(wb, paste0(report_name, as_of_date, ".xlsx"), TRUE)</pre></div>
 
 	<h3 class="article-subtitle">Final Thought - Why Automate?</h3>
 	
