@@ -56,77 +56,78 @@
 
     <h1 class="article-title">Automated Excel Report Generation with R</h1>
 
-    <span class="article-date">3/31/2019</span>
+    <span class="article-date">4/28/2019</span>
 
 
 
 
 
-<p>This post is a follow-up to my earlier post, <a href="/2019/03/24/information-security-tab/index.html">Use R to add a Data Disclaimer to an Excel Report</a>. In that post, we created a single enterprise-wide human resources report and added a data disclaimer.   
+<p>This post is a follow-up to my earlier post, <a href="/2019/04/07/information-security-tab/index.html">Use R to add a Data Disclaimer to an Excel Report</a>. In that post, we created a single enterprise-wide human resources report along with a data disclaimer.   
 
-<p>Here we will automate that same report and generate 1 report for each of the 7 lines of business that report to the CEO.  One report for each leader who reports directly to the CEO. We will reuse much of the same code as before.  It would be a good idea to read through that post if you have not yet already. 
+<p>Here we will automate that same report and generate 1 report for each of the 9 lines of business that report to the CEO of the same fictitious company.  So one report for each leader who reports directly to the CEO. 
+
+<p>We will reuse much of the same code as before.  It would be a good idea to read through the exercise in the link above if you have not yet already. 
 
 <p>First, let's load our libraries, update our variables, and import our data.
 
 <div class="scrollbox" tabindex="0">
- 	<pre class="scrollbox-content">library(tidyverse)
+ 	<pre class="scrollbox-content">#devtools::install_github("harryahlas/hrsample")
+library(hrsample)
+library(tidyverse)
 library(scales)
+library(lubridate)
 library(openxlsx)
 
+# Tracking information
 as_of_date &lt;- Sys.Date()
-report_name &lt;- "PA73405 - Attrition by Job 2009"
-
-deskhistory_table &lt;- read_csv("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/deskhistory_table.csv")
-deskjob_table &lt;- read_csv("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/deskjob_table.csv")
-	</pre>
+report_name &lt;- "PA73405 - Attrition by Job 2009"</pre>
 </div>
 
-<p>In the previous post, we were simply aggregating across the company. However, since we want to break this data out by line of business, we need to add hierarchy information that will tell us which employees are in each department.  To do this, we will import a new table called <code>hierarchy_spread</code>.
+<p>In the previous exercise, we simply aggregated across the company. However, this task is a little more complex.  We want to break this data out by line of business, so we need to add hierarchy information that will tell us which employees rollup to each department leader.  To do this, we will import a new view called <code>rollup_view</code>.
 
 <div class="scrollbox" tabindex="0">
- 	<pre class="scrollbox-content">hierarchy_spread &lt;- read_csv("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/hierarchy_spread.csv")
-glimpse(hierarchy_spread, width = 70)
-
-Observations: 1,085
-Variables: 14
-$ lvl00_desk_id &lt;int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
-$ lvl00_org     &lt;chr> "CEO", "CEO", "CEO", "CEO", "CEO", "CEO", "...
-$ lvl01_desk_id &lt;int> 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2...
-$ lvl01_org     &lt;chr> "Finance", "Finance", "Finance", "Finance",...
-$ lvl02_desk_id &lt;int> 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9...
-$ lvl02_org     &lt;chr> "Fnnc - Accounting", "Fnnc - Accounting", "...
-$ lvl03_desk_id &lt;int> 92, 92, 92, 92, 92, 92, 92, 93, 93, 93, 93,...
-$ lvl03_org     &lt;chr> "Fnnc - Accntng - PSI", "Fnnc - Accntng - P...
-$ desk_id       &lt;int> 179, 180, 181, 182, 183, 184, 185, 186, 187...
-$ org           &lt;chr> "Fnnc - Accntng - PSI - IC01", "Fnnc - Accn...
-$ state_flag    &lt;lgl> FALSE, FALSE, FALSE, FALSE, FALSE, FALSE, F...
-$ state_present &lt;chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...
-$ job_name      &lt;chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...
-$ pct_of_lob    &lt;dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...</pre>
+ 	<pre class="scrollbox-content">glimpse(rollup_view, width = 70)
+	
+Observations: 1,233
+Variables: 11
+$ lvl00_desk_id <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1...
+$ lvl00_org     <chr> "CEO", "CEO", "CEO", "CEO", "CEO", "CEO", "...
+$ lvl01_desk_id <int> 1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 2, 4, 6, 7, ...
+$ lvl01_org     <chr> "CEO", "Human Resources", "Sales", "Marketi...
+$ lvl02_desk_id <int> 1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 14, 26, 30, ...
+$ lvl02_org     <chr> "CEO", "Human Resources", "Sales", "Marketi...
+$ lvl03_desk_id <int> 1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 14, 26, 30, ...
+$ lvl03_org     <chr> "CEO", "Human Resources", "Sales", "Marketi...
+$ lvl04_desk_id <int> 1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 14, 26, 30, ...
+$ lvl04_org     <chr> "CEO", "Human Resources", "Sales", "Marketi...
+$ depth         <dbl> 0.000000e+00, 4.940656e-324, 4.940656e-324,...</pre>
 </div>
 
 <p>As mentioned earlier, the original report we created was for the CEO (<code>lvl00_org</code>).  Here, we want to break out multiple reports for each department (<code>lvl01_org</code>).  Here are the names of these departments, along with a count of employee <code>desk_id</code>s:
 
 <div class="scrollbox" tabindex="0">
- 	<pre class="scrollbox-content">hierarchy_spread %>% count(lvl01_org) %>% arrange(desc(n))
+ 	<pre class="scrollbox-content">rollup_view %>% count(lvl01_org) %>% arrange(desc(n))
 	
 	# A tibble: 7 x 2
   lvl01_org           n
   &lt;chr>           &lt;int>
-1 Sales             579
-2 Technology        125
-3 Legal             102
-4 Finance            86
-5 Human Resources    79
-6 Marketing          63
-7 Strategy           51</pre>
+ 1 Sales             488
+ 2 Technology        158
+ 3 Human Resources   119
+ 4 Compliance         89
+ 5 Operations         85
+ 6 Legal              83
+ 7 Finance            73
+ 8 Strategy           70
+ 9 Marketing          67
+10 CEO                 1</pre>
 </div>
 
 <p>You can see Sales has the highest number of employees, followed by Technology.   
 
-	<h3 class="article-subtitle">Add Leaders</h3>
+<!--	<h3 class="article-subtitle">Add Leaders</h3>
 
-<p>The <code>hierarchy_spread</code> table has one row for each individual contributor. Since we want to include data for every employee that reports to the CEO, we need to add rows for managers as well. There will be one report for each leader in level 1, which means we need to add rows for managers in levels 2 and 3.  The code below gets us there - it creates one data frame for the level 2 leaders, and data frame for the level 1 leaders.
+<p>The <code>rollup_view</code> table has one row for each employee. Since we want to include data for every employee that reports to the CEO, we need to add rows for managers as well. There will be one report for each leader in level 1, which means we need to add rows for managers in levels 2 and 3.  The code below gets us there - it creates one data frame for the level 2 leaders, and data frame for the level 1 leaders.
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">hierarchy_spread_lvl02 &lt;- hierarchy_spread %>% 
@@ -163,51 +164,60 @@ $ job_name      &lt;chr> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...
 $ pct_of_lob    &lt;dbl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA,...</pre>
 </div>
 
+-->
+<h3 class="article-subtitle">Join data to hierarchy</h3>
 
-<p>Next, we'll join our raw data, <code>deskhistory_table</code>, to the hierarchy information we just created.  <code>deskhistory_table</code> captures the start and end dates for each employee's job. It also captures whether the job resulted in a termination. Each employee (<code>employee_num</code>) sits at a unique <code>desk_id</code>, which rolls up to one of the 7 lines of business.  
-###########start here
+<p>Next, we'll join our raw data, <code>deskhistory_table</code>, to <code>rollup_view</code>.  <code>deskhistory_table</code> captures the start and end dates for each employee's job. It also captures whether the job resulted in a termination. Each employee (<code>employee_num</code>) sits at a unique <code>desk_id</code>, which rolls up to one of the 7 lines of business.  
+
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">deskhistory_table_hierarchy &lt;- deskhistory_table %>% 
-  left_join(hierarchy_spread_all %>% select(lvl01_desk_id,
-                                        lvl01_org,
-                                        desk_id) %>% distinct(), by = "desk_id")
+  left_join(rollup_view %>% select(lvl01_desk_id,
+                                            lvl01_org,
+                                            lvl04_desk_id) %>% distinct(), 
+            by = c("desk_id" = "lvl04_desk_id"))
 
 glimpse(deskhistory_table_hierarchy[sample(1:nrow(deskhistory_table_hierarchy)),], width = 70)
 
 Observations: 4,724
 Variables: 8
-$ employee_num       &lt;int> 21684, 34068, 24507, 12504, 7549, 1386...
-$ desk_id            &lt;int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,...
-$ desk_id_start_date &lt;date> 1999-01-01, 1999-01-01, 1999-01-01, 1...
-$ desk_id_end_date   &lt;date> 2999-01-01, 2002-10-01, 2003-07-04, 2...
-$ termination_flag   &lt;int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...
-$ promotion_flag     &lt;int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,...
-$ lvl01_desk_id      &lt;int> NA, NA, NA, NA, NA, NA, NA, NA, 2, 2, ...
-$ lvl01_org          &lt;chr> NA, NA, NA, NA, NA, NA, NA, NA, "Finan...</pre>
+$ employee_num       <int> 2712, 7430, 8024, 4110, 40481, 34383, ...
+$ desk_id            <int> 1116, 615, 188, 439, 676, 650, 370, 83...
+$ desk_id_start_date <date> 2018-12-26, 1999-01-01, 2011-07-21, 2...
+$ desk_id_end_date   <date> 2999-01-01, 2003-03-21, 2018-07-16, 2...
+$ termination_flag   <int> 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1,...
+$ promotion_flag     <int> 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,...
+$ lvl01_desk_id      <int> 9, 4, 9, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,...
+$ lvl01_org          <chr> "Operations", "Sales", "Operations", "...</pre>
 </div>
+
+<p>Our new table, <code>deskhistory_table_hierarchy</code>, includes all the desk history information along with the LOB name, <code>lvl01_org</code>.
 
 	<h3 class="article-subtitle">Use a loop</h3>
 
-<p>We'll use a loop to create one report for each LOB.  So one report for each <code>lvl01_org</code>.  (Alternately, you may want to use some sort of apply or map function.)
+<p>We'll use a loop to create one report for each LOB.  So one report for each <code>lvl01_org</code>.  
 
 <p>To start, let's create a data frame called <code>LOB_list</code> that has each of the 7 LOBs as well as the desk id for each LOB leader: <code>lvl01_desk_id</code>.  The plan is to loop through each row/LOB in this data frame and create a new report during each loop.
 
 <div class="scrollbox" tabindex="0">
- 	<pre class="scrollbox-content">LOB_list &lt;- hierarchy_spread_all %>% 
+ 	<pre class="scrollbox-content">LOB_list &lt;- rollup_view %>% 
   select(lvl01_org, lvl01_desk_id) %>% 
-  distinct()
+  distinct() %>% 
+  filter(lvl01_org != "CEO")
+
 LOB_list
 
 # A tibble: 7 x 2
   lvl01_org       lvl01_desk_id
   &lt;chr>                   &lt;int>
-1 Finance                     2
-2 Human Resources             3
-3 Sales                       4
-4 Marketing                   5
-5 Legal                       6
-6 Technology                  7
-7 Strategy                    8</pre>
+1 Human Resources             3
+2           Sales             4
+3       Marketing             5
+4           Legal             6
+5      Technology             7
+6        Strategy             8
+7      Operations             9
+8         Finance             2
+9      Compliance            10</pre>
 </div>
 
 <p>Now that we have something to loop through, we can start on the loop.
@@ -216,17 +226,17 @@ LOB_list
  	<pre class="scrollbox-content">for (i in (1:length(LOB_list$lvl01_org))) {
 </pre>
 </div>
-<p>Note the variable <code>i</code> will start at 1 and increase each time we run through the loop until it reaches the last row (row 7 for Strategy) in <code>LOB_list</code>.  
+<p>Note the variable <code>i</code> will start at 1 and increase each time we run through the loop until it reaches the last row (row 9 for Compliance) in <code>LOB_list</code>.  
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">org_name &lt;- LOB_list$lvl01_org[i]</pre>
 </div>
 
 
-<p>The code we are going to cycle through in each loop is nearly identical to our previous entry's enterprise-wide report.  The first addition is <code>filter(lvl01_org == LOB_list$lvl01_org[i]) %>%</code>.  In the code below, you can see this line filters the report for rows that roll up to the LOB that the loop is currently running through.
+<p>The code we are going to cycle through in each loop is nearly identical to our previous entry's enterprise-wide report.  The first addition is <code>filter(lvl01_org == LOB_list$lvl01_org[i]) %>%</code>.  In the code below, you can see this line filters the report for rows that roll up to the LOB that the loop is currently running through.  Again, refer to the previous exercise for more detail about the code below.
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">  hcto_summary &lt;- deskhistory_table_hierarchy %>% 
-    filter(lvl01_org == LOB_list$lvl01_org[i]) %>% # Added for this example
+        filter(lvl01_org == LOB_list$lvl01_org[i]) %>% 
     left_join(deskjob_table) %>% 
     filter(desk_id_start_date &lt;= as.Date("2009-12-31"),
            desk_id_end_date >= as.Date("2009-01-01")) %>% 
@@ -235,7 +245,7 @@ LOB_list
     filter(row_number() == 1) %>% 
     ungroup() %>% 
     mutate(year = "2009",
-           termination_flag = if_else(termination_flag == 1, "Terminated", "DidNotTerminate")) %>% 
+           termination_flag = if_else(termination_flag == 1 & year(desk_id_end_date) == 2009, "Terminated", "DidNotTerminate")) %>% 
     count(year, job_name, termination_flag) %>% 
     spread(termination_flag, n, fill = 0) %>% 
     mutate(Headcount =  Terminated + DidNotTerminate,
@@ -247,7 +257,7 @@ LOB_list
 <p>Similarly, we have a single modification for the disclaimer, where we add <code>org_name</code> do clarify who the data is rolling up to.
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">  disclaimer_info &lt;-   data.frame(Information = 
-    c("Source: https://github.com/harryahlas/sample-hr-database/tree/master/data",
+    c("Source: hrsample database",
       paste("Data as of", as_of_date, "."),
       paste("Data includes all employees in", org_name ,"who were active at any point from Jan 1, 2009 through December 31, 2009."), # Added for this example
       "If the employee had multiple jobs during 2009, only the most recent job is counted.",
