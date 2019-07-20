@@ -40,15 +40,13 @@
     <span class="article-duration">20 min read</span>
     <h1 class="article-title">Multi-Condition Data Retrieval</h1>
 
-    <span class="article-date">4/7/2019</span>
+    <span class="article-date">7/21/2019</span>
 
 	<h3 class="article-subtitle">How to use R and SQL to Circumvent Technology Limitations on Large Queries with 2 or more Conditions</h3>
 
-<p>Sometimes our standard business intelligence tools can fail when clients ask for data wrangling our tools are not built to retrieve. One example I run into fairly often in people analytics is when a client wants to know what employees were doing on specific dates.
+<p>Sometimes standard business intelligence tools can fail when clients ask for complex data wrangling the tools are not built to retrieve. One people analytics example I have run into is when a client wants to know information about employees as of specific dates.
 
-<p>You may work with tools that can handle this type of seemingly simple business question.  However, not all of us have that luxury.
-
-<p>Often, systems are built for single-condition queries. Typically, clients come to us with a spreadsheet like the one below, where one condition changes - different employee numbers - but the other columns do not change.  
+<p>Sometimes, seemingly simple business questions like this can be challenging. Often, systems are built for single-condition queries. Typically, clients may come with a spreadsheet like the one below, where one condition changes - different employee numbers - but the other columns do not change.  
 
 <p><div class="scrollbox" tabindex="0">
 		<pre class="scrollbox-content"><img src="easy_retrieval.gif"></pre>
@@ -62,17 +60,22 @@ In this case, if the client wants information about these employees on that date
 		<pre class="scrollbox-content"><img src="difficult_retrieval.gif"></pre>
 	</div>
 
-Now we have two conditions that can change.  This second condition - multiple dates - adds a layer of complexity that our BI systems often cannot handle.  We are required to hand code each condition. Yuck! This limitation, as well as others, become glaring when clients ask for larger amounts of data, say 50,000 rows. 
+Now we have two conditions that can change.  This second condition - multiple dates - adds a layer of complexity that some BI systems cannot handle.  We are required to hand code each condition. Yuck! This limitation, as well as others, become glaring when clients ask for larger amounts of data, say 50,000 rows. 
 
 <p>I have more information about these BI tool limitations and why I have chosen this solution <a href="multi-condition-data-retrieval-challenges.html" id="additional">here</a>.
 
 <p>In this post we will circumvent the limitations of our standard BI tools to make multi-condition data retrieval easier. We will:</p>
 <ul class="task-list">
-	<li><label>Import a sample client spreadsheet into R</label></li>
+	<li><label>Import data</label></li>
+	<li><label>Connect to an SQL database</label></li>
+	<li><label>Create an SQL query with special placeholders</label></li>
+	<li><label>Run the SQL query iteratively</label></li>
+	<li><label>Export data</label></li>  
+<!--	<li><label>Import a sample client spreadsheet into R</label></li>
 	<li><label>Connect R directly to the HR database</label></li>
 	<li><label>Create an SQL query with placeholders</label></li>
 	<li><label>Iterate the SQL query through the client data</label></li>
-	<li><label>Export the updated file for the client</label></li>  
+	<li><label>Export the updated file for the client</label></li>  -->
 </ul>
 
 <p>I want to be clear that the following methodology is not for everyone.  This process meets the need in my environment and I thought I would share in the hope that some of you will benefit from this information. 
@@ -82,14 +85,14 @@ Now we have two conditions that can change.  This second condition - multiple da
 
 	
 	<h3 class="article-subtitle">Client Data</h3>
-<p>We'll start with Excel to see the file the client has provided. <a href="https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/JohnsonLitigationResearch.xlsx">Here</a> is a link to the file and here is a screengrab:</p>
+<p>For our example, we'll say a client wants to know the job titles a set of employees had on some sort of incident or notification date.  We'll start with Excel to see the file the client has provided. <a href="https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/data/JohnsonLitigationResearch.xlsx">Here</a> is a link to the file and here is a screengrab:</p>
 
 <div class="scrollbox" tabindex="0">
 	<pre class="scrollbox-content"><img src="client_input.gif"></pre>
 </div>
 
-<p>The client has privided us with a list of employee numbers and dates and asked us to populate the <code>`Job Name`</code> field. So the client wants to know what job title - if any - the employee had on some sort of incident or notification date.  Column C, <code>Role in incident</code>, is irrelevant to our data pull but the client wants us to include it in the final file we provide.
-<p>Let's move to R and and import our data using readxl. We'll load the other libraries we'll need as well. Since the sample client Excel file is stored on GitHub, we can use the httr package to download and write it to disk in a temp file.  Then we can import with readxl's <code>read_excel</code> function.
+<p>The client has privided us with a list of employee numbers and dates and asked us to populate the <code>`Job Name`</code> field.   Column C, <code>Role in incident</code>, is irrelevant to our data pull but the client wants us to include it in the final file we provide.
+<p>Let's move to R and and import our data using the <em>readxl</em> package. We'll load the other libraries we'll need as well. Since the sample client Excel file is stored on GitHub, we can use the httr package to download and write it to disk in a temp file.  Then we can import with readxl's <code>read_excel</code> function.
 
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">library(RMariaDB)
@@ -114,7 +117,8 @@ input_data &lt;- read_excel(temp_file)
   mutate(`Date of incident or notification` = 
 	as.Date(`Date of incident or notification`))</pre>
 </div>
-
+START HERE - I THINK JUST USE ONE OF THE FUNCTIONS IN THE PACKAGE, ALSO UPDATE THE INSTRUCTIONS
+start WITH C:\Users\Anyone\Documents\R\toss\sqlitetest
 	<h3 class="article-subtitle">The HR Sample Database and Connecting to R</h3>
 <p>The job title data the client is interested in is available in the <em>hrsample</em> database. For the purpose of this exercise, we'll access the hrsample data via SQL.   You can install the SQL database on your machine using the instructions <a href="/2019/03/17/hrsample-database/index.html#mysql">here</a>.    
 
