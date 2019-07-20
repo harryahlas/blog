@@ -95,8 +95,7 @@ Now we have two conditions that can change.  This second condition - multiple da
 <p>Let's move to R and and import our data using the <em>readxl</em> package. We'll load the other libraries we'll need as well. Since the sample client Excel file is stored on GitHub, we can use the httr package to download and write it to disk in a temp file.  Then we can import with readxl's <code>read_excel</code> function.
 
 <div class="scrollbox" tabindex="0">
- 	<pre class="scrollbox-content">library(RMariaDB)
-library(tidyverse)
+ 	<pre class="scrollbox-content">library(tidyverse)
 library(openxlsx)
 library(readxl)
 library(httr)
@@ -120,29 +119,41 @@ input_data &lt;- read_excel(temp_file)
 START HERE - I THINK JUST USE ONE OF THE FUNCTIONS IN THE PACKAGE, ALSO UPDATE THE INSTRUCTIONS
 start WITH C:\Users\Anyone\Documents\R\toss\sqlitetest
 	<h3 class="article-subtitle">The HR Sample Database and Connecting to R</h3>
-<p>The job title data the client is interested in is available in the <em>hrsample</em> database. For the purpose of this exercise, we'll access the hrsample data via SQL.   You can install the SQL database on your machine using the instructions <a href="/2019/03/17/hrsample-database/index.html#mysql">here</a>.    
+<p>The job title data the client is interested in is available in the <em>hrsample</em> database. For the purpose of this exercise, we'll access the hrsample data via an SQLite3 database.   You can install an SQLite database on your machine using these instructions.  
 
-<p>Here, we will use the MySQL Postgres????Use the <code>RMariaDB</code> package to connect to HRSAMPLE and take a look at the tables available.
+<ul class="task-list">
+	<li><label>Download SQLite from <a href="https://www.sqlite.org/download.html">here.</a> (I am running Windows and found <i>sqlite-tools-win32-x86-3290000.zip</i> under "Precompiled Binaries for Windows")</label>.</li> 
+	<li><label>Open the zip file and save <i>sqlite3.exe</i> to a location on your machine.</label></li>
+	<li>More detailed instructions are <a href= "http://www.sqlitetutorial.net/download-install-sqlite/">here</a> if needed.</li>
+</ul>
+
+<p>The <em>hrsample</em> R package has a function to automatically install the data to an SQLite database.  Make sure R's working directory is set to the same folder that you copied the <i>sqlite3.exe</i> file. Then run the following:
 
 <div class="scrollbox" tabindex="0">
- 	<pre class="scrollbox-content">HRSAMPLE &lt;- dbConnect(MariaDB(), 
-                      user='newuser', 
-                      password='newuser', 
-                      dbname='hrsample', 
-                      host='localhost')
-					  
-dbListTables(HRSAMPLE)
-[1] "deskhistory"       "deskjob"          
-[3] "employeeinfo"      "hierarchy"        
-[5] "performancereview" "salaryhistory"</pre>
+ 	<pre class="scrollbox-content">devtools::install_github("harryahlas/hrsample")
+library(hrsample)
+hrsampleCreateSQLite("my_db.sqlite3")
+	</pre>
 </div>
 
-<p>The <code>deskhistory</code> and <code>desk_id</code> tables have what we need.  The <code>deskhistory</code> table has a history of employee positions (<code>desk_id</code>s) in the company, showing who sat where at what time. The <code>deskjob</code> table shows what job belongs to each <code>desk_id</code>.  We can join the two tables to determine what job an employee had on any date.
+<p>Here, we will use the <code>RSQLite</code> package to connect to HRSAMPLE and take a look at the tables available.
+
+<div class="scrollbox" tabindex="0">
+ 	<pre class="scrollbox-content">HRSAMPLE &lt;- dbConnect(RSQLite::SQLite(), 
+    'my_db.sqlite3')
+					  
+dbListTables(HRSAMPLE)
+ [1] "contact_table"     "deskhistory"       "deskjob"           "education_table"   "employeeinfo"     
+ [6] "hierarchy"         "performancereview" "recruiting_table"  "rollup_view"       "salaryhistory"    
+[11] "skills_table" </pre>
+</div>
+
+<p>The <code>deskhistory</code> and <code>desk_id</code> tables have what we need.  The <code>deskhistory</code> table has a history of employee positions (<code>desk_id</code>s) in the company, showing who sat where at what time. The <code>deskjob</code> table shows what job belongs to each <code>desk_id</code>.  We can join the two tables to determine what job an employee had on any date.  We will use SQL to retrieve the data.
 
 <h3 class="article-subtitle">Create a test SQL query</h3>
 
-<p>Our final SQL query will have some complexities.  Prior to creating our final query with placeholder variables, it is a good idea to create a short test script with hard-coded conditions.  Test scripts are easier to debug and help ensure your query is solid. Below is a sample SQL script that retrieves employee number 43349's job on December 5, 2003.  
-
+<p>Prior to creating our final SQL query with placeholder variables, it is a good idea to create a short test script with hard-coded conditions.  Test scripts are easier to debug and help ensure your query is solid. Below is a sample SQL script that retrieves employee number 43349's job on December 5, 2003.  
+!!!!!!!!!!!!!!mcdr_test.sql IS NOT WORKING!!!!!!!!!!!!
 <div class="scrollbox" tabindex="0">
  	<pre class="scrollbox-content">SELECT
 	'<b>2003-12-05</b>' AS "Date of incident or notification",
@@ -154,7 +165,7 @@ dbListTables(HRSAMPLE)
 	`hrsample`.`deskjob` DJ  
  WHERE 
 	DJ.desk_id = DH.desk_id
-	AND DH.employee_num = <b>43349</b> 
+	AND DH.employee_num = <b>12417</b> 
 	AND DH.desk_id_start_date &lt;= DATE('<b>2003-12-05</b>') 
 	AND DH.desk_id_end_date &lt;= DATE('<b>2003-12-05</b>') ;</pre>
 </div>	
