@@ -16,15 +16,15 @@ blog_files <- blog_files[grepl(blog_files,pattern = "jpg|png|gif") != TRUE]
 #local_url <- "C:\\\\Development\\\\github\\\\blog\\\\public"
 #new_url <- "http://earlydemise.com/blog/public"
 
-local_url <- "C:\\\\Development\\\\github\\\\blog\\\\public"
-new_url <- "http://earlydemise.com/blog/public"
-
-
-for(blog_file in blog_files) {
-  x <- readLines(blog_file)
-  y <- gsub(local_url, new_url, x)
-  cat(y, file=blog_file, sep="\n")
-}
+# local_url <- "C:\\\\Development\\\\github\\\\blog\\\\public"
+# new_url <- "http://earlydemise.com/blog/public"
+# 
+# 
+# for(blog_file in blog_files) {
+#   x <- readLines(blog_file)
+#   y <- gsub(local_url, new_url, x)
+#   cat(y, file=blog_file, sep="\n")
+# }
 
 
 # Reap --------------------------------------------------------------------
