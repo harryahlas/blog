@@ -94,7 +94,7 @@ Now we have two conditions that can change.  This second condition - multiple da
 <p>The client has privided us with a list of employee numbers and dates and asked us to populate the <code>`Job Name`</code> field.   Column C, <code>Role in incident</code>, is irrelevant to our data pull but the client wants us to include it in the final file we provide.
 <p>Let's move to R and and import our data using the <em>readxl</em> package. We'll load the other libraries we'll need as well. Since the sample client Excel file is stored on GitHub, we can use the httr package to download and write it to disk in a temp file.  Then we can import with readxl's <code>read_excel</code> function.
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">library(tidyverse)
 library(openxlsx)
 library(readxl)
@@ -110,7 +110,7 @@ input_data &lt;- read_excel(temp_file)
 
 <p>We can remove the <code>`Job Name`</code> field since we will be replacing it.  Additionally, let's update the date field to a date format.  This will help with joins later.
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">input_data &lt;- input_data %>% 
   select(-`Job Name`) %>% 
   mutate(`Date of incident or notification` = 
@@ -128,7 +128,7 @@ input_data &lt;- read_excel(temp_file)
 -->
 <p>The <em>hrsample</em> R package has a function to automatically install the data to an SQLite database via the <em>RSQLite</em> package. More detailed instructions on how to install SQLite are <a href= "http://www.sqlitetutorial.net/download-install-sqlite/">here</a> if needed.<!--.  Make sure R's working directory is set to the same folder that you copied the <i>sqlite3.exe</i> file. Then run the following-->
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">devtools::install_github("harryahlas/hrsample")
 library(hrsample)
 hrsampleCreateSQLite("my_db.sqlite3")
@@ -137,7 +137,7 @@ hrsampleCreateSQLite("my_db.sqlite3")
 
 <p>We can connect using <em>RSQLite</em> and take a look at the tables available:
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">con &lt;- dbConnect(RSQLite::SQLite(), 
     'my_db.sqlite3')
 					  
@@ -153,7 +153,7 @@ dbListTables(con)
 
 <p>Prior to creating our final SQL query with placeholder variables, it is a good idea to create a short test script with hard-coded conditions.  Test scripts are easier to debug and help ensure your query is solid. Below is a sample SQL script that retrieves employee number 33066's job on February 18, 2018.  
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">SELECT
 	'<b>2018-02-18</b>' AS "Date of incident or notification",
 	DH.employee_num,
@@ -171,7 +171,7 @@ dbListTables(con)
 
 <p>The above script is available online as <a href="https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/scripts/mcdr_test.sql">mcdr_test.sql</a>. You can run it using the code below in R. You can see  employee 33066 was an Analyst on 2/18/2018.
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">test_sql &lt;- read_file("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/scripts/mcdr_test.sql")
 test_df &lt;- dbGetQuery(con, test_sql)
 test_df
@@ -192,7 +192,7 @@ test_df
 </ul>
 <p>The new code looks like this:
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">SELECT
  DATE('<b>%DATE_ID%</b>') AS "Date of incident or notification",
  DH.employee_num,
@@ -212,13 +212,13 @@ test_df
 
 <p>Before we iterate through the entire client spreadsheet, let's do a final test on one row of the client data to make sure the script with the placeholders works. Let's start by importing mcdr.sql.
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">mvdr_sql_placeholder &lt;- read_file("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/scripts/mcdr.sql")</pre>
 </div>
 
 <p>Next, we'll use base R's <code>gsub</code> function to fill the placeholders with the client's data.  For this example, we only want to pull data for a single employee/date pair, so we'll subset row <code>[1]</code> of the data for the <code>replacement</code> arguments. 
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">mvdr_sql &lt;- mvdr_sql_placeholder %>% 
   gsub(pattern = '%EMP_ID%',
        replacement = input_data$`Employee Number`<b>[1]</b>,
@@ -230,7 +230,7 @@ test_df
 
 <p>Now that the placeholders have been filled, we can retrieve the data.
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">df_one_row &lt;- dbGetQuery(con, mvdr_sql)
 
 df_one_row
@@ -247,13 +247,13 @@ df_one_row
 <p>To start, we will create an empty data frame called <code>df</code>. As we cycle through the client data, we'll append our results to <code>df</code>.  
 
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">df &lt;- tibble()</pre>
 </div>
 
 <p>Next, we'll start our for loop.  Again, this will be one iteration per row. So <code>i</code> will be the same as the row number of the input data.
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">for (i in 1:nrow(input_data)) {</pre>
 </div>
 
@@ -265,7 +265,7 @@ df_one_row
 	<li>Save the retrieved data to a temporary data frame called <code>df_temp</code></li>
 	<li>Convert the <code>`Date of incident or notification`</code> field to text (SQLite is superfast but can be challenging when working with dates)</li>
 </ul>
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">  # Replace placeholders with employee_num and date
   mvdr_sql &lt;- mvdr_sql_placeholder %>% 
     gsub(pattern = '%EMP_ID%',
@@ -283,7 +283,7 @@ df_one_row
 
 <p>The last piece of the loop will append the temporary data <code>df_temp</code> to the prior retrievals in <code>df</code>.
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">	df &lt;- bind_rows(df, df_temp)
 }</pre>
 </div>
@@ -295,7 +295,7 @@ df_one_row
 
 <p>I try to add some realism to these examples when I can and a couple of those pieces are on display here. The client has asked for data that may not exist.  They may be asking for employee information on a date that the employee was not with the company.  Maybe the team member had terminated prior to that date. In those cases, our query retrieves NAs.  We'll use the <code>replace_na</code> function to add context for those NAs:  <i>not with company at this time</i>.   We will even format the job name and employee number columns to match what was on the client's spreadsheet.
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">output &lt;- input_data %>% 
   left_join(df %>% select(-desk_id),
 			by = c("Date of incident or notification", 
@@ -307,7 +307,7 @@ df_one_row
 <p>Last, we'll use <code>openxlsx</code> to export to Excel.  For this example we will export a single tab.  Normally, I would include a second disclaimer tab, which I strongly recommend and discuss in another blog post called <a href="/2019/04/07/information-security-tab/index.html">Use R to add a Data Disclaimer to an Excel Report</a>.
 
 
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">wb &lt;- createWorkbook()
 addWorksheet(wb, "HR data needed with output")
 writeDataTable(wb, 1, output)
@@ -315,7 +315,7 @@ saveWorkbook(wb, "Johnson litigation research with job_name.xlsx", TRUE)</pre>
 </div>
 
 <p>Here is the exported file:
-<div class="scrollbox" tabindex="0">
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
 	<pre class="scrollbox-content"><img src="client_output.gif"></pre><p>
 </div>
 
