@@ -180,12 +180,16 @@ pre {
 .scrollbox {
   overflow: auto;
   visibility: hidden;
+#  overflow:scroll;
+#-webkit-overflow-scrolling:touch;
 }
 
 .scrollbox-content,
 .scrollbox:hover,
 .scrollbox:focus {
   visibility: visible;
+#    overflow:scroll;
+#-webkit-overflow-scrolling:touch;
 }
 
 .scrollbox_delayed {
