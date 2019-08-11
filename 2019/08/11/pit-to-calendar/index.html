@@ -63,7 +63,7 @@ library(RSQLite)
 library(lubridate)</pre>
 </div>
 
-<p>We will start by installing the <em>hrsample</em>  HR database (<a href="http://http://harry.ahlas.com/2019/03/17/hrsample-database/index.html">hrsample blog</a>).  If you went through my earlier blog entry, <a href="http://http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/index.html">Multi-Condition Data Retrieval</a>, you can continue to use that same database and skip this next step.
+<p>We will start by installing the ficticious <em>hrsample</em>  HR database (<a href="http://http://harry.ahlas.com/2019/03/17/hrsample-database/index.html">hrsample blog</a>).  If you went through my earlier blog entry, <a href="http://http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/index.html">Multi-Condition Data Retrieval</a>, you can continue to use that same database and skip this next step.
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">#devtools::install_github("harryahlas/hrsample")
@@ -153,11 +153,20 @@ month_list &alt;- seq.Date(start_date, end_date, by = "month")</pre>
 </pre>
 </div>
 
-<p>A more detailed look at the code is below. Feel free to <a href="#additional">skip ahead</a>.
+<p>Let's take a look at a small sample of our new monthly calendar data:
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">dh_trend %>% sample_n(3)
+# A tibble: 3 x 6
+  employee_num desk_id desk_id_start_date desk_id_end_date termination_flag trend_month
+         <int>   <int> <date>             <date>                      <dbl> <date>     
+1         2690     524 2010-11-04         2015-01-17                      0 2014-09-01 
+2          762     503 2006-04-07         2009-02-23                      0 2006-10-01 
+3        24996     813 2002-08-23         2007-08-06                      0 2003-02-01 </pre>
+</div>
+
+<p>Every employee has a row for each month they were active. A more detailed look at the for loop code is below. Feel free to <a href="#additional">skip ahead</a>.
 
 <h3 class="article-subtitle">Inside the for loop</h3>
-
-
 
 <p>The first piece of the for loop specifies how many loops to run.  This is the number of months in our list of months (<code>month_list</code>) 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
@@ -201,9 +210,8 @@ The code looks at the <code>desk_id_start_date</code> and <code>desk_id_end_date
  	<pre class="scrollbox-content">  dh_trend &alt;- bind_rows(dh_trend, dh_trend_active, dh_trend_term)</pre>
 </div>
 
-
 <h3 class="article-subtitle" id="additional">Additional Transformation</h3>
-
+<p>Our new monthly calendar data looks okay but we want to enhance it to fit with the SQLite specs and make it more useful by adding additional fields.
 <p>As mentioned earlier, SQLite does not support date formats.  So we have to reformat the three date columns back to text.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">dh_trend$desk_id_start_date &lt;- format(dh_trend$desk_id_start_date, "%Y-%m-%d")
@@ -211,238 +219,92 @@ dh_trend$desk_id_end_date &lt;- format(dh_trend$desk_id_end_date, "%Y-%m-%d")
 dh_trend$trend_month &lt;- format(dh_trend$trend_month, "%Y-%m-%d")</pre>
 </div>
 
-<p>
+<p>To increase the value of this calendar data, we'll add job names to our data. Each desk_id has a job assigned to it.  That assignment is on the <em>deskjob</em> table.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">input_data &lt;- input_data</pre>
+ 	<pre class="scrollbox-content">dj &lt;- dbGetQuery(con, "SELECT * FROM DESKJOB")
+dh_trend &lt;- dh_trend %>% 
+  left_join(dj)</pre>
 </div>
 
-<p>
+<p>Adding an organizational rollup hierarchy will make this table more valuable for reporting. This organizational information will enable us to report on individual lines of business/business groups. We can retrieve org information from the <em>rollup</em> table. 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">input_data &lt;- input_data</pre>
+ 	<pre class="scrollbox-content">ru &lt;- dbGetQuery(con, "SELECT * FROM ROLLUP")</pre>
 </div>
 
+<p>While the <em>rollup</em> table has a lot of useful information that will come in handy for monthly reporting, we can remove the CEO level columns since they are the same for everyone and do not add value.
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">ru &lt;- ru %>% 
+  select(-lvl00_desk_id, - lvl00_org)</pre>
+</div>
+
+<p>Now join the hierarchy rollup data:
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">dh_trend &lt;- dh_trend %>% 
+  left_join(ru, by = c("desk_id" = "lvl04_desk_id"))</pre>
+</div>
+
+<p>Let's also add the employee's name from the <em>employeeinfo</em> table.
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">ei &lt;- dbGetQuery(con, "SELECT * FROM EMPLOYEEINFO")
+dh_trend &lt;- dh_trend %>% 
+  left_join(ei %>% select(employee_num,
+                          last_name,
+                          first_name))</pre>
+</div>
+
+<p>Our last transformation is to simply reorder some of the rows.
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">dh_trend &lt;- dh_trend %>% 
+  select(trend_month,
+         employee_num,
+         last_name,
+         first_name, 
+         job_name,
+         depth,
+         everything())</pre>
+</div>
+
+<p>Our data is now transformed into calendar format with all the desired fields and formatting.  Let's take a look before we load the data.
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">dh_trend %>% sample_n(3)
+# A tibble: 3 x 17
+  trend_month employee_num last_name first_name job_name depth desk_id desk_id_start_d~ desk_id_end_date
+  <chr>              <int> <chr>     <chr>      <chr>    <int>   <int> <chr>            <chr>           
+1 2001-09-01         21823 Carthen   Leesa      Salespe~     4     511 1999-01-01       2001-11-04      
+2 2005-02-01         37797 Karley    Jessica    Product~     4    1096 2005-02-06       2007-05-08      
+3 1999-03-01         18859 Manvelito Rogelio    Consult~     4     224 1999-01-01       2004-06-19      
+# ... with 8 more variables: termination_flag <dbl>, lvl01_desk_id <int>, lvl01_org <chr>, lvl02_desk_id <int>,
+#   lvl02_org <chr>, lvl03_desk_id <int>, lvl03_org <chr>, lvl04_org <chr></pre>
+</div>
 
 
 <h3 class="article-subtitle">Load</h3>
 
-<p>We can remove the <code>`Job Name`</code> field since we will be replacing it.  Additionally, let's update the date field to a date format.  This will help with joins later.
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">input_data &lt;- input_data %>% 
-  select(-`Job Name`) %>% 
-  mutate(`Date of incident or notification` = 
-	as.Date(`Date of incident or notification`))</pre>
+<p>Our last step is to upload the data to a new table to our database.  We will call the table "employee_trend".  I love how easy it is to load data using R:<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">dbWriteTable(con, "employee_trend", dh_trend, overwrite = TRUE)</pre>
 </div>
 
-	<h3 class="article-subtitle">The HR Sample Database and Connecting to R</h3>
-<p>The job title data the client is interested in is available in the <em>hrsample</em> database. For the purpose of this exercise, we'll access the <em>hrsample</em> data via an SQLite3 database.  <!-- You can install an SQLite database on your machine using these instructions.  
-
-<ul class="task-list">
-	<li><label>Download SQLite from <a href="https://www.sqlite.org/download.html">here.</a> (I am running Windows and found <i>sqlite-tools-win32-x86-3290000.zip</i> under "Precompiled Binaries for Windows")</label>.</li> 
-	<li><label>Open the zip file and save <i>sqlite3.exe</i> to a location on your machine.</label></li>
-	<li>More detailed instructions are <a href= "http://www.sqlitetutorial.net/download-install-sqlite/">here</a> if needed.</li>
-</ul>
--->
-<p>The <em>hrsample</em> R package has a function to automatically install the data to an SQLite database via the <em>RSQLite</em> package. More detailed instructions on how to install SQLite are <a href= "http://www.sqlitetutorial.net/download-install-sqlite/">here</a> if needed.<!--.  Make sure R's working directory is set to the same folder that you copied the <i>sqlite3.exe</i> file. Then run the following-->
-
+<p>Finally, let's retrieve a sample of our results.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">devtools::install_github("harryahlas/hrsample")
-library(hrsample)
-hrsampleCreateSQLite("my_db.sqlite3")
-	</pre>
+ 	<pre class="scrollbox-content">et_sample &lt;- dbGetQuery(con, "SELECT * FROM EMPLOYEE_TREND ORDER BY RANDOM() LIMIT 3")
+glimpse(et_sample
+  trend_month employee_num  last_name first_name        job_name depth desk_id desk_id_start_date desk_id_end_date
+1  1999-05-01        43321     Alegar    Jacques Regional Leader     3      77         1999-01-01       2002-04-11
+2  2016-10-01        36887       Nuhn       Lexy Product Manager     4     254         2015-04-10       2018-10-01
+3  2015-07-01         3715 Weisbecker     Archer Project Manager     4     846         2009-09-24       2999-01-01
+  termination_flag lvl01_desk_id lvl01_org lvl02_desk_id                                     lvl02_org
+1                0             4     Sales            27                                    Sls - West
+2                0             2   Finance            14                                  Fnnc - Audit
+3                0             5 Marketing            20 Mrktng - Marketing and Information Management
+  lvl03_desk_id                               lvl03_org                                      lvl04_org
+1            77                      Sls - Wst - Nevada                             Sls - Wst - Nevada
+2           106                        Fnnc - Adt - RAA                        Fnnc - Adt - RAA - IC10
+3           124 Mrktng - Mrktng nd Infrmtn Mngmnt - RAA Mrktng - Mrktng nd Infrmtn Mngmnt - RAA - IC04</pre>
 </div>
 
-<p>We can connect using <em>RSQLite</em> and take a look at the tables available:
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">con &lt;- dbConnect(RSQLite::SQLite(), 
-    'my_db.sqlite3')
-					  
-dbListTables(con)
- [1] "contact_table"     "deskhistory"       "deskjob"           "education_table"   "employeeinfo"     
- [6] "hierarchy"         "performancereview" "recruiting_table"  "rollup_view"       "salaryhistory"    
-[11] "skills_table" </pre>
-</div>
-
-<p>The <code>deskhistory</code> and <code>desk_id</code> tables have what we need.  The <code>deskhistory</code> table has a history of employee positions (<code>desk_id</code>s) in the company, showing who sat where at what time. The <code>deskjob</code> table shows what job belongs to each <code>desk_id</code>.  We can join the two tables to determine what job an employee had on any date.  We will use SQL to retrieve the data.
-
-<h3 class="article-subtitle">Create a test SQL query</h3>
-
-<p>Prior to creating our final SQL query with placeholder variables, it is a good idea to create a short test script with hard-coded conditions.  Test scripts are easier to debug and help ensure your query is solid. Below is a sample SQL script that retrieves employee number 33066's job on February 18, 2018.  
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">SELECT
-	'<b>2018-02-18</b>' AS "Date of incident or notification",
-	DH.employee_num,
-	DH.desk_id,
-	DJ.job_name
- FROM
-	deskhistory DH,
-	deskjob DJ  
- WHERE 
-	DJ.desk_id = DH.desk_id
-	AND DH.employee_num = <b>33066</b> 
-	AND DH.desk_id_start_date &lt;= DATE('<b>2018-02-18</b>') 
-	AND DH.desk_id_end_date &lt;= DATE('<b>2018-02-18</b>') ;</pre>
-</div>	
-
-<p>The above script is available online as <a href="https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/scripts/mcdr_test.sql">mcdr_test.sql</a>. You can run it using the code below in R. You can see  employee 33066 was an Analyst on 2/18/2018.
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">test_sql &lt;- read_file("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/scripts/mcdr_test.sql")
-test_df &lt;- dbGetQuery(con, test_sql)
-test_df
-
-  Date of incident or notification employee_num desk_id job_name
-1                       2018-02-18        33066    1062  <b>Analyst</b></pre>
-</div>		
-
-<h3 class="article-subtitle">Add Placeholders to the SQL</h3>
-	
-<p>Now that we have a functional script that can pull one employee/date pair, we can scale the script by adding placeholders.  The placeholders can be replaced with the multiple conditions that the client has provided.
-
-<p>In this request, we have two conditions that can change: <code>employee_num</code> and <code>Date of incident or notification</code>.  In our new SQL script, let's make these changes:
-
-<ul>
-	<li>Replace <code>employee_num</code> with <code>%EMP_ID%</code></li>
-	<li>Replace <code>Date of incident or notification</code> with <code>%DATE_ID%</code></li>
-</ul>
-<p>The new code looks like this:
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">SELECT
- DATE('<b>%DATE_ID%</b>') AS "Date of incident or notification",
- DH.employee_num,
- DH.desk_id,
- DJ.job_name
- FROM
-	deskhistory DH, 
-	deskjob DJ  
- WHERE 
- DJ.desk_id = DH.desk_id
- AND DH.employee_num = <b>%EMP_ID%</b> 
- AND DH.desk_id_start_date &lt;= DATE('<b>%DATE_ID%</b>') 
- AND DH.desk_id_end_date >= DATE('<b>%DATE_ID%</b>') ;</pre>
-</div>	
-
-<p>So we now have a script, <a href="https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/scripts/mcdr.sql">mcdr.sql</a>, that we can iterate through each employee/date pair the client has provided.  We can replace <code>%EMP_ID%</code> and <code>%DATE_ID%</code> with the data in each row of the client's worksheet. (Note the % signs in the placeholders are cosmetic and not required.)  
-
-<p>Before we iterate through the entire client spreadsheet, let's do a final test on one row of the client data to make sure the script with the placeholders works. Let's start by importing mcdr.sql.
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">mvdr_sql_placeholder &lt;- read_file("https://raw.githubusercontent.com/harryahlas/sample-hr-database/master/scripts/mcdr.sql")</pre>
-</div>
-
-<p>Next, we'll use base R's <code>gsub</code> function to fill the placeholders with the client's data.  For this example, we only want to pull data for a single employee/date pair, so we'll subset row <code>[1]</code> of the data for the <code>replacement</code> arguments. 
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">mvdr_sql &lt;- mvdr_sql_placeholder %>% 
-  gsub(pattern = '%EMP_ID%',
-       replacement = input_data$`Employee Number`<b>[1]</b>,
-       x = .) %>% 
-  gsub(pattern = '%DATE_ID%',
-       replacement = input_data$`Date of incident or notification`<b>[1]</b>,
-       x = .)</pre>
-</div>
-
-<p>Now that the placeholders have been filled, we can retrieve the data.
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">df_one_row &lt;- dbGetQuery(con, mvdr_sql)
-
-df_one_row
-  Date of incident or notification employee_num desk_id job_name
-1                       2018-02-18        33066    1062  <b>Analyst</b></pre>
-</div>	
-
-<p>Great! The code is working and we are ready run through all the client data.	
-
-	<h3 class="article-subtitle">Ready to Go - Let's Iterate</h3>
-	
-<p>We will use a for loop to retrieve the data. So one loop and retrieval for each row of client data.  As I mention in <a href="multi-condition-data-retrieval-challenges.html">my side post</a>, this is not the fastest way to pull data (and certainly not the only way) but it is a good hack to get around the system limitations that we can face.
-
-<p>To start, we will create an empty data frame called <code>df</code>. As we cycle through the client data, we'll append our results to <code>df</code>.  
+<p>Looks good! I hope you found this exercise valuable.  Thank you for taking the time to read this. Please don't hesitate to reach out to me via Twitter with any questions/comments/suggestions.
 
 
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">df &lt;- tibble()</pre>
-</div>
-
-<p>Next, we'll start our for loop.  Again, this will be one iteration per row. So <code>i</code> will be the same as the row number of the input data.
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">for (i in 1:nrow(input_data)) {</pre>
-</div>
-
-<p>Once we are in the for loop, we will repeat the same code we used in the previous test run, with three changes:
-
-<ul> 
-	<li>Add <code>[i]</code> to subset <code>input_data$`Employee Number`</code></li>	
-	<li>Add <code>[i]</code> to subset <code>input_data$`Date of incident or notification`</code></li>
-	<li>Save the retrieved data to a temporary data frame called <code>df_temp</code></li>
-	<li>Convert the <code>`Date of incident or notification`</code> field to text (SQLite is superfast but can be challenging when working with dates)</li>
-</ul>
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">  # Replace placeholders with employee_num and date
-  mvdr_sql &lt;- mvdr_sql_placeholder %>% 
-    gsub(pattern = '%EMP_ID%',
-         replacement = input_data$`Employee Number`<b>[i]</b>,
-         x = .) %>% 
-    gsub(pattern = '%DATE_ID%',
-         replacement = input_data$`Date of incident or notification`<b>[i]</b>,
-         x = .)
-  
-  # Retrieve data to temporary table
-  <b>df_temp</b> &lt;- dbGetQuery(con, mvdr_sql)
-  
-  df_temp$`Date of incident or notification` &lt;- <b>as.Date</b>(df_temp$`Date of incident or notification`)</pre>
-</div>
-
-<p>The last piece of the loop will append the temporary data <code>df_temp</code> to the prior retrievals in <code>df</code>.
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">	df &lt;- bind_rows(df, df_temp)
-}</pre>
-</div>
-
-<p>Running the code above will create a data frame with the information the client needs.
-
-	<h3 class="article-subtitle">Export to Excel</h3>
-<p>To make things easy on the client, we'll make our process look as seamless as possible.  We'll export an Excel file that looks nearly identical to what the client provided.  We'll start with our <code>input_data</code> data frame and join it to the new data from our for loop.
-
-<p>I try to add some realism to these examples when I can and a couple of those pieces are on display here. The client has asked for data that may not exist.  They may be asking for employee information on a date that the employee was not with the company.  Maybe the team member had terminated prior to that date. In those cases, our query retrieves NAs.  We'll use the <code>replace_na</code> function to add context for those NAs:  <i>not with company at this time</i>.   We will even format the job name and employee number columns to match what was on the client's spreadsheet.
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">output &lt;- input_data %>% 
-  left_join(df %>% select(-desk_id),
-			by = c("Date of incident or notification", 
-			       "Employee Number" = "employee_num")) %>% 
-  replace_na(list(job_name = "not with company at this time")) %>% 
-  rename(`Job Name` = job_name)</pre>
-</div>
-
-<p>Last, we'll use <code>openxlsx</code> to export to Excel.  For this example we will export a single tab.  Normally, I would include a second disclaimer tab, which I strongly recommend and discuss in another blog post called <a href="/2019/04/07/information-security-tab/index.html">Use R to add a Data Disclaimer to an Excel Report</a>.
-
-
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">wb &lt;- createWorkbook()
-addWorksheet(wb, "HR data needed with output")
-writeDataTable(wb, 1, output)
-saveWorkbook(wb, "Johnson litigation research with job_name.xlsx", TRUE)</pre>
-</div>
-
-<p>Here is the exported file:
-<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
-	<pre class="scrollbox-content"><img src="client_output.gif"></pre><p>
-</div>
-
-	<h3 class="article-subtitle">Final Thoughts</h3>
-<p>I didn't share it here but I want to add I'll usually include code to automatically log in/log out of the database periodically.  This will prevent the connection from timing out.  It is a must for the larger retrievals which can take several hours.
-<p>Hopefully your work environment is more flexible than mine and you are able to create temporary tables without having to worry about timeouts and avoid having to loop through retrievals as described here.  But if you do face the same challenges I do then I hope this information has been helpful.  I would enjoy hearing any feedback you have.
-
-	
-	
-	
 
 
     </div>
