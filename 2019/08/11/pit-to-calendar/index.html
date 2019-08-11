@@ -85,7 +85,7 @@ hrsample::hrsampleCreateSQLite("my_db.sqlite3")</pre>
 </div>
 
 
-<p>Let's look a little closer at the <code>dh</code> (deskhistory) table.
+<p>Let's look a little closer at a sample of the <code>dh</code> (<em>deskhistory</em>) table.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">sample_employee_num &lt;- sample(dh$employee_num,1)
 dh %>% filter(employee_num == sample_employee_num)
@@ -94,31 +94,31 @@ employee_num desk_id desk_id_start_date desk_id_end_date termination_flag
 2         5970     274         2012-04-26       2014-05-23                0
 3         5970     990         2014-05-24       2016-03-12                1</div>
 
-<p>The deskhistory data is transactional. It shows one row for each instance an employee was in a desk_id (aka position). It includes a start date <code>desk_id_start_date</code> and end date <code>desk_id_end_date</code>. This is known as point in time data.
+<p>The deskhistory data is a transactional, point-in-time table. It shows one row for each instance an employee was in a desk_id (aka position). It includes a start date <code>desk_id_start_date</code> and end date <code>desk_id_end_date</code>. 
 
-<p>Our goal is to get this point in time data in to a monthly snapshot, which can be very useful for reporting and analysis. The monthly table will have one row for each month the employee is in a desk_id.
+<p>Our goal is to convert this point in time data in to a monthly snapshot, which can be very useful for reporting and analysis. The monthly table will have one row for each month the employee is in a desk_id.
 
 <h3 class="article-subtitle">Transform</h3>
 
-<p>One of the drawbacks of SQLite is that it does not store date formats.  So the first transform will be to convert the date fields from text into dates.  We will also remove the <code>promotion_flag</code> variable since it is not needed here.
+<p>One of the drawbacks of SQLite is that it does not store date formats.  So our first transform will be to convert the date fields from text into dates.  We will also remove the <code>promotion_flag</code> variable since it is not needed here.
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">dh &alt;- dh %>% 
+ 	<pre class="scrollbox-content">dh &lt;- dh %>% 
   mutate(desk_id_start_date = as.Date(desk_id_start_date),
          desk_id_end_date = as.Date(desk_id_end_date)) %>% 
   select(-promotion_flag)</pre>
 </div>
 
-<p>Next, let's create an empty data frame that we will populate with our monthly calendar data
+<p>Next, let's create an empty data frame that we will populate with our monthly calendar data.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">dh_trend &alt;- tibble()</pre>
+ 	<pre class="scrollbox-content">dh_trend &lt;- tibble()</pre>
 </div>
 
 <p>We need to create a list of all months that will be included in our calendar table data.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">start_date &alt;- as.Date("1999-01-01")
-end_date &alt;- as.Date("2018-12-31")#, tz = "UTC")  
-month_list &alt;- seq.Date(start_date, end_date, by = "month")</pre>
+ 	<pre class="scrollbox-content">start_date &lt;- as.Date("1999-01-01")
+end_date &lt;- as.Date("2018-12-31")  
+month_list &lt;- seq.Date(start_date, end_date, by = "month")</pre>
 </div>
 
 <p>Now we are ready to do the real work - creating the new data.  To do so, we will create a for loop that:
@@ -130,25 +130,24 @@ month_list &alt;- seq.Date(start_date, end_date, by = "month")</pre>
 </ul>
 
 <p>Here is the code for our loop.  We'll review it in more detail in a minute.
-####PUT THIS LATER Note we had to reassign the termination flag for months that they did not terminate
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">for (i in 1:length(month_list)) {
-  dh_trend_active &alt;- dh %>% 
-    filter(desk_id_start_date &alt;= ceiling_date(month_list[i], "month") - 1,
+  dh_trend_active &lt;- dh %>% 
+    filter(desk_id_start_date &lt;= ceiling_date(month_list[i], "month") - 1,
            desk_id_end_date >= ceiling_date(month_list[i], "month") - 1) %>% 
     filter(termination_flag == 0 | desk_id_end_date != ceiling_date(month_list[i], "month") - 1) %>% 
     mutate(trend_month = month_list[i],
            termination_flag = 0)
   
-  dh_trend_term &alt;- dh %>% 
+  dh_trend_term &lt;- dh %>% 
     filter(termination_flag == 1,
-           desk_id_end_date &alt;= ceiling_date(month_list[i], "month") - 1,
+           desk_id_end_date &lt;= ceiling_date(month_list[i], "month") - 1,
            desk_id_end_date >= month_list[i]
            ) %>% 
     mutate(trend_month = month_list[i])
   
-  dh_trend &alt;- bind_rows(dh_trend, dh_trend_active, dh_trend_term)
+  dh_trend &lt;- bind_rows(dh_trend, dh_trend_active, dh_trend_term)
 }
 </pre>
 </div>
@@ -173,19 +172,20 @@ month_list &alt;- seq.Date(start_date, end_date, by = "month")</pre>
  	<pre class="scrollbox-content">for (i in 1:length(month_list)) {</pre>
 </div>
 
-<p>Then we'll create a temporary data frame <code>dh_trend_active</code> that captures active employees for the month in the current iteration. 
+<p>Then we create a temporary data frame <code>dh_trend_active</code> that captures active employees for the month in the current iteration. 
 The code looks at the <code>desk_id_start_date</code> and <code>desk_id_end_date</code> columns to determine if an employee was active during that month.
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">dh_trend_active &alt;- dh %>% 
-    filter(desk_id_start_date &alt;= ceiling_date(month_list[i], "month") - 1,
+ 	<pre class="scrollbox-content">dh_trend_active &lt;- dh %>% 
+    filter(desk_id_start_date &lt;= ceiling_date(month_list[i], "month") - 1,
            desk_id_end_date >= ceiling_date(month_list[i], "month") - 1) %>% 
   </pre>
 </div>
 
-<p>The code above excludes employees who terminated during the month unless they terminated on the last day of the month.  We need to exclude those end of month terminations here, otherwise they will be doublecounted with terminations piece coming up. So we'll filter them out with this "link" in the <em>dplyr chain</em>:
+<p>The code above excludes employees who terminated during the month <em>unless</em> they terminated on the last day of the month.  We need to exclude those end of month terminations here, otherwise they will be doublecounted with terminations piece coming up. So we'll filter them out with this "link" in the <em>dplyr chain</em>:
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">filter(termination_flag == 0 | desk_id_end_date != ceiling_date(month_list[i], "month") - 1) %>% 
+ 	<pre class="scrollbox-content">filter(termination_flag == 0 
+	| desk_id_end_date != ceiling_date(month_list[i], "month") - 1) %>% 
     </pre>
 </div>
 
@@ -197,9 +197,9 @@ The code looks at the <code>desk_id_start_date</code> and <code>desk_id_end_date
 
 <p>The loop repeats a nearly identical process for terminated employees. The key difference is that we are filtering for "termination" rows: where the job was the employee's last prior to terminating (<code>termination_flag == 1</code>).
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">dh_trend_term &alt;- dh %>% 
+ 	<pre class="scrollbox-content">dh_trend_term &lt;- dh %>% 
   filter(termination_flag == 1,
-         desk_id_end_date &alt;= ceiling_date(month_list[i], "month") - 1,
+         desk_id_end_date &lt;= ceiling_date(month_list[i], "month") - 1,
          desk_id_end_date >= month_list[i]
   ) %>% 
   mutate(trend_month = month_list[i])</pre>
@@ -207,11 +207,11 @@ The code looks at the <code>desk_id_start_date</code> and <code>desk_id_end_date
 
 <p>The last piece of the loop binds the new rows to our <code>dh_trend</code> table:
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">  dh_trend &alt;- bind_rows(dh_trend, dh_trend_active, dh_trend_term)</pre>
+ 	<pre class="scrollbox-content">  dh_trend &lt;- bind_rows(dh_trend, dh_trend_active, dh_trend_term)</pre>
 </div>
 
 <h3 class="article-subtitle" id="additional">Additional Transformation</h3>
-<p>Our new monthly calendar data looks okay but we want to enhance it to fit with the SQLite specs and make it more useful by adding additional fields.
+<p>Our new monthly calendar data produced by the for loop looks okay but we can enhance it.  We can make it fit with the SQLite specs and make it more useful by adding additional fields.
 <p>As mentioned earlier, SQLite does not support date formats.  So we have to reformat the three date columns back to text.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">dh_trend$desk_id_start_date &lt;- format(dh_trend$desk_id_start_date, "%Y-%m-%d")
@@ -287,19 +287,26 @@ dh_trend &lt;- dh_trend %>%
 <p>Finally, let's retrieve a sample of our results.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">et_sample &lt;- dbGetQuery(con, "SELECT * FROM EMPLOYEE_TREND ORDER BY RANDOM() LIMIT 3")
-glimpse(et_sample
-  trend_month employee_num  last_name first_name        job_name depth desk_id desk_id_start_date desk_id_end_date
-1  1999-05-01        43321     Alegar    Jacques Regional Leader     3      77         1999-01-01       2002-04-11
-2  2016-10-01        36887       Nuhn       Lexy Product Manager     4     254         2015-04-10       2018-10-01
-3  2015-07-01         3715 Weisbecker     Archer Project Manager     4     846         2009-09-24       2999-01-01
-  termination_flag lvl01_desk_id lvl01_org lvl02_desk_id                                     lvl02_org
-1                0             4     Sales            27                                    Sls - West
-2                0             2   Finance            14                                  Fnnc - Audit
-3                0             5 Marketing            20 Mrktng - Marketing and Information Management
-  lvl03_desk_id                               lvl03_org                                      lvl04_org
-1            77                      Sls - Wst - Nevada                             Sls - Wst - Nevada
-2           106                        Fnnc - Adt - RAA                        Fnnc - Adt - RAA - IC10
-3           124 Mrktng - Mrktng nd Infrmtn Mngmnt - RAA Mrktng - Mrktng nd Infrmtn Mngmnt - RAA - IC04</pre>
+glimpse(et_sample)
+Observations: 3
+Variables: 17
+$ trend_month        <chr> "2002-02-01", "2008-08-01", "2007-10-01"
+$ employee_num       <int> 26962, 33111, 9524
+$ last_name          <chr> "Reade", "Turri", "Douet"
+$ first_name         <chr> "Melvyn", "Denver", "Keegan"
+$ job_name           <chr> "Developer", "Paralegal", "Salesperson"
+$ depth              <int> 4, 4, 4
+$ desk_id            <int> 1032, 875, 504
+$ desk_id_start_date <chr> "2001-11-30", "2006-06-28", "2007-06-25"
+$ desk_id_end_date   <chr> "2002-08-02", "2008-12-21", "2008-06-29"
+$ termination_flag   <dbl> 0, 0, 0
+$ lvl01_desk_id      <int> 7, 6, 4
+$ lvl01_org          <chr> "Technology", "Legal", "Sales"
+$ lvl02_desk_id      <int> 39, 29, 25
+$ lvl02_org          <chr> "Tchnlgy - Data Science", "Lgl - Product", "Sls - South"
+$ lvl03_desk_id      <int> 169, 138, 61
+$ lvl03_org          <chr> "Tchnlgy - Dt Scnc - RAA", "Lgl - Prdct - PSI", "Sls - Sth - Florida"
+$ lvl04_org          <chr> "Tchnlgy - Dt Scnc - RAA - IC01", "Lgl - Prdct - PSI - IC01", "Sls - Sth - Florida -...</pre>
 </div>
 
 <p>Looks good! I hope you found this exercise valuable.  Thank you for taking the time to read this. Please don't hesitate to reach out to me via Twitter with any questions/comments/suggestions. And don't forget to close the connection:
