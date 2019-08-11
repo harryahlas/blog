@@ -37,19 +37,19 @@
 
 <main class="content" role="main">
   <article class="article">
-    <span class="article-duration">10 min read</span>
-    <h1 class="article-title">Multi-Condition Data Retrieval</h1>
+    <span class="article-duration">15 min read</span>
+    <h1 class="article-title">Basic ETL with R and SQL</h1>
 
     <span class="article-date">8/11/2019</span>
 
-	<h3 class="article-subtitle">Basic ETL with R and SQL: Create Calendar Table from Point In Time Data</h3>
+	<h3 class="article-subtitle">Create a Calendar Table from Point In Time Data</h3>
 
-<p>Today we will dive into ETL: 
+<p>Today we will dive into ETL by taking the following steps: 
 
 <ul class="task-list">
-	<li><label>Extract data from a point in time table</label></li>
-	<li><label>Transform the extract into a monthly table</label></li>
-	<li><label>Load the data back to the database</label></li>
+	<li><label><b>E</b>xtract data from a point in time table</label></li>
+	<li><label><b>T</b>ransform the extract into a monthly table</label></li>
+	<li><label><b>L</b>oad the data back to the database</label></li>
 </ul>
 	
 <p>For this exercise we will use R and SQLite.  I like the simplicity of SQLite.  It is very fast for this type of database and easy to install, though there are some drawbacks that we will touch upon.
@@ -302,7 +302,11 @@ glimpse(et_sample
 3           124 Mrktng - Mrktng nd Infrmtn Mngmnt - RAA Mrktng - Mrktng nd Infrmtn Mngmnt - RAA - IC04</pre>
 </div>
 
-<p>Looks good! I hope you found this exercise valuable.  Thank you for taking the time to read this. Please don't hesitate to reach out to me via Twitter with any questions/comments/suggestions.
+<p>Looks good! I hope you found this exercise valuable.  Thank you for taking the time to read this. Please don't hesitate to reach out to me via Twitter with any questions/comments/suggestions. And don't forget to close the connection:
+
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">dbDisconnect(con)</pre>
+</div>
 
 
 
