@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Hugo 0.53" />
 
-<title>Harry Ahlas - Multi-Condition Data Retrieval</title>
-<meta property="og:title" content="Harry Ahlas - Multi-Condition Data Retrieval">
+<title>Harry Ahlas - Point in Time to Calendar ETL</title>
+<meta property="og:title" content="Harry Ahlas - Point in Time to Calendar ETL">
 
 <link href='/css/github.min.css' rel='stylesheet' type='text/css' />
 <link rel="stylesheet" href="/css/fonts.css" media="all">
@@ -153,14 +153,77 @@ month_list &alt;- seq.Date(start_date, end_date, by = "month")</pre>
 </pre>
 </div>
 
-<p>A more detailed look at the code is below. Feel free to <a href="xxx">SKIP AHEAD</a>.
+<p>A more detailed look at the code is below. Feel free to <a href="#additional">skip ahead</a>.
 
-<p>Let's connect to the database.
+<h3 class="article-subtitle">Inside the for loop</h3>
+
+
+
+<p>The first piece of the for loop specifies how many loops to run.  This is the number of months in our list of months (<code>month_list</code>) 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">con <- dbConnect(SQLite(),'my_db.sqlite3')</pre>
+ 	<pre class="scrollbox-content">for (i in 1:length(month_list)) {</pre>
+</div>
+
+<p>Then we'll create a temporary data frame <code>dh_trend_active</code> that captures active employees for the month in the current iteration. 
+The code looks at the <code>desk_id_start_date</code> and <code>desk_id_end_date</code> columns to determine if an employee was active during that month.
+
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">dh_trend_active &alt;- dh %>% 
+    filter(desk_id_start_date &alt;= ceiling_date(month_list[i], "month") - 1,
+           desk_id_end_date >= ceiling_date(month_list[i], "month") - 1) %>% 
+  </pre>
+</div>
+
+<p>The code above excludes employees who terminated during the month unless they terminated on the last day of the month.  We need to exclude those end of month terminations here, otherwise they will be doublecounted with terminations piece coming up. So we'll filter them out with this "link" in the <em>dplyr chain</em>:
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">filter(termination_flag == 0 | desk_id_end_date != ceiling_date(month_list[i], "month") - 1) %>% 
+    </pre>
+</div>
+
+<p>The next piece of this chain creates a new column for the month and recodes the <code>termination_flag</code> to 0 since these employees were all active during that month.
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">mutate(trend_month = month_list[i],
+           termination_flag = 0)</pre>
+</div>
+
+<p>The loop repeats a nearly identical process for terminated employees. The key difference is that we are filtering for "termination" rows: where the job was the employee's last prior to terminating (<code>termination_flag == 1</code>).
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">dh_trend_term &alt;- dh %>% 
+  filter(termination_flag == 1,
+         desk_id_end_date &alt;= ceiling_date(month_list[i], "month") - 1,
+         desk_id_end_date >= month_list[i]
+  ) %>% 
+  mutate(trend_month = month_list[i])</pre>
+</div>
+
+<p>The last piece of the loop binds the new rows to our <code>dh_trend</code> table:
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">  dh_trend &alt;- bind_rows(dh_trend, dh_trend_active, dh_trend_term)</pre>
 </div>
 
 
+<h3 class="article-subtitle" id="additional">Additional Transformation</h3>
+
+<p>As mentioned earlier, SQLite does not support date formats.  So we have to reformat the three date columns back to text.
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">dh_trend$desk_id_start_date &lt;- format(dh_trend$desk_id_start_date, "%Y-%m-%d")
+dh_trend$desk_id_end_date &lt;- format(dh_trend$desk_id_end_date, "%Y-%m-%d")
+dh_trend$trend_month &lt;- format(dh_trend$trend_month, "%Y-%m-%d")</pre>
+</div>
+
+<p>
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">input_data &lt;- input_data</pre>
+</div>
+
+<p>
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">input_data &lt;- input_data</pre>
+</div>
+
+
+
+<h3 class="article-subtitle">Load</h3>
 
 <p>We can remove the <code>`Job Name`</code> field since we will be replacing it.  Additionally, let's update the date field to a date format.  This will help with joins later.
 
