@@ -63,7 +63,7 @@ library(RSQLite)
 library(lubridate)</pre>
 </div>
 
-<p>We will start by installing the ficticious <em>hrsample</em>  HR database (<a href="http://http://harry.ahlas.com/2019/03/17/hrsample-database/index.html">hrsample blog</a>).  If you went through my earlier blog entry, <a href="http://http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/index.html">Multi-Condition Data Retrieval</a>, you can continue to use that same database and skip this next step.
+<p>We will start by installing the ficticious <em>hrsample</em>  HR database (<a href="http://harry.ahlas.com/2019/03/17/hrsample-database/index.html">hrsample blog</a>).  If you went through my earlier blog entry, <a href="http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/index.html">Multi-Condition Data Retrieval</a>, you can continue to use that same database and skip this next step.
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">#devtools::install_github("harryahlas/hrsample")
@@ -89,10 +89,11 @@ hrsample::hrsampleCreateSQLite("my_db.sqlite3")</pre>
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">sample_employee_num &lt;- sample(dh$employee_num,1)
 dh %>% filter(employee_num == sample_employee_num)
-employee_num desk_id desk_id_start_date desk_id_end_date termination_flag
-1         5970     274         2009-02-03       2012-04-25                0
-2         5970     274         2012-04-26       2014-05-23                0
-3         5970     990         2014-05-24       2016-03-12                1</div>
+  employee_num desk_id desk_id_start_date desk_id_end_date termination_flag promotion_flag
+1        14447     535         2003-12-12       2006-10-26                0              0
+2        14447     535         2006-10-27       2009-07-23                0              1
+3        14447     535         2009-07-24       2011-11-04                0              1
+4        14447     535         2011-11-05       2014-12-15                1              1</div>
 
 <p>The deskhistory data is a transactional, point-in-time table. It shows one row for each instance an employee was in a desk_id (aka position). It includes a start date <code>desk_id_start_date</code> and end date <code>desk_id_end_date</code>. 
 
@@ -118,7 +119,10 @@ employee_num desk_id desk_id_start_date desk_id_end_date termination_flag
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">start_date &lt;- as.Date("1999-01-01")
 end_date &lt;- as.Date("2018-12-31")  
-month_list &lt;- seq.Date(start_date, end_date, by = "month")</pre>
+month_list &lt;- seq.Date(start_date, end_date, by = "month")
+
+month_list[1:5]
+[1] "1999-01-01" "1999-02-01" "1999-03-01" "1999-04-01" "1999-05-01"</pre>
 </div>
 
 <p>Now we are ready to do the real work - creating the new data.  To do so, we will create a for loop that:
@@ -127,6 +131,7 @@ month_list &lt;- seq.Date(start_date, end_date, by = "month")</pre>
 	<li>Identifies the employees that were active as of the last day of that month
 	<li>Identifies the employees that terminated during that month
 	<li>Adds rows to our table for these active and terminated employees
+	<li>Adds a <code>trend_month</code> field representing month the employee was in the company
 </ul>
 
 <p>Here is the code for our loop.  We'll review it in more detail in a minute.
@@ -163,7 +168,7 @@ month_list &lt;- seq.Date(start_date, end_date, by = "month")</pre>
 3        24996     813 2002-08-23         2007-08-06                      0 2003-02-01 </pre>
 </div>
 
-<p>Every employee has a row for each month they were active. A more detailed look at the for loop code is below. Feel free to <a href="#additional">skip ahead</a>.
+<p>Every employee has a row for each month they were active. Note the new <code>trend_month</code> field. A more detailed look at the for loop code is below. Feel free to <a href="#additional">skip ahead</a>.
 
 <h3 class="article-subtitle">Inside the for loop</h3>
 
@@ -182,7 +187,7 @@ The code looks at the <code>desk_id_start_date</code> and <code>desk_id_end_date
   </pre>
 </div>
 
-<p>The code above excludes employees who terminated during the month <em>unless</em> they terminated on the last day of the month.  We need to exclude those end of month terminations here, otherwise they will be doublecounted with terminations piece coming up. So we'll filter them out with this "link" in the <em>dplyr chain</em>:
+<p>The code above excludes employees who terminated during the month <em>unless</em> they terminated on the last day of the month.  We need to exclude those end of month terminations here, otherwise they will be doublecounted with the terminations piece coming up. So we'll filter them out with this "link" in the <em>dplyr chain</em>:
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">filter(termination_flag == 0 
 	| desk_id_end_date != ceiling_date(month_list[i], "month") - 1) %>% 
@@ -252,7 +257,7 @@ dh_trend &lt;- dh_trend %>%
                           first_name))</pre>
 </div>
 
-<p>Our last transformation is to simply reorder some of the rows.
+<p>Our last transformation is to simply reorder some of the columns.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">dh_trend &lt;- dh_trend %>% 
   select(trend_month,
