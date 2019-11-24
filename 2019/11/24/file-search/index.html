@@ -44,7 +44,7 @@
 
 	<h3 class="article-subtitle">Search files for specific text in specific filetypes</h3>
 
-<p>This script searches a directory or drive for specific text in specific filetypes.  I use it often and thought it is worth sharing.  Here is a link to <a href="https://github.com/harryahlas/file_search/blob/master/file_search.R">the code</a> and to the <a href="https://github.com/harryahlas/file_search">github repository</a>.
+<p>This script searches a directory or drive for specific text in specific filetypes.  I use it often and thought it is worth sharing.  Here is a link to <a href="https://github.com/harryahlas/file_search/blob/master/file_search.R">the code</a> and to the <a href="https://github.com/harryahlas/file_search">github repository</a>.  The full code is also available at <a href="#fullcode">the bottom of this page</a>.
 
 <h3 class="article-subtitle">When to Use this Script</h3>
 <p>On occasion, there are times where you need to look through old work for something.  For example, maybe there is a change to field in a database and you need to understand how it impacts your prior work.  You may want to know which old scripts have that field name.  
@@ -59,33 +59,36 @@
 
 <h3 class="article-subtitle">An Example</h3>
 
-<p>For this exercise, please open <em>RStudio > File > New Project... > Version Control > Git</em>.  Under <em>Repository URL</em> paste <em>https://github.com/harryahlas/file_search.git</em> then click <em>Create Project</em>. Then under the <em>Files</em> tab click <em>file_search.R</em>.
+<p>For this exercise, please open a new RStudio project:
+<ol class="task-list">
+<li>Open RStudio
+<li><em>File > New Project... > Version Control > Git</em>
+<li>Under <em>Repository URL</em> paste <em>https://github.com/harryahlas/file_search.git</em> 
+<li>Click <em>Create Project</em>
+<li>Under the <em>Files</em> tab click <em>file_search.R</em>.
+</ol>
 
 <p>In this example, let's say we are interested in knowing what SQL and README files in the <em>sql-data-warehouse-samples-master</em> directory contain the text "security" or "exec". We only need to search through files ending in either <em>.sql</em> or <em>.md</em>.
 
-<p>Let's walk through the code.  
-
-<p>I am a big fan of the <code>tidyverse</code> workflow; we'll start by loading this package.
+<p>Let's walk through the code.  I am a big fan of the <code>tidyverse</code> workflow; we'll start by loading this package.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">library(tidyverse)</div>
 
-<p>In this example, we'll search the <em>sql-data-warehouse-samples-master</em> folder.  Note: these files are sourced from https://github.com/Microsoft/sql-data-warehouse-samples.
+<p>In this example, we'll search the <em>sql-data-warehouse-samples-master</em> folder.  Note - these files are sourced from <a href="https://github.com/Microsoft/sql-data-warehouse-samples">https://github.com/Microsoft/sql-data-warehouse-samples</a>. Of course you can switch this to any directory you choose.
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">directory_to_search <- "sql-data-warehouse-samples-master"</div>
 
-<p>Of course you can switch this to any directory you choose.
-
-<p>Next we'll specify the types of files we want to search.  We are only interested in SQL and README files, so we will look for files that end in either <em>.sql</em> or <em>.md</em>
+<p>Next we'll specify the types of files we want to search.  We are only interested in SQL and README files, so we will look for files that end in either <em>.sql</em> or <em>.md</em>.
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">extension_types <- c(".sql", ".md")</div>
 
-<p>Now we will specify the terms that we want to search for within each SQL or README file.
+<p>Now we will specify the terms that we want to search for within each SQL or README file, "security" and "exec".
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">search_terms <- c("security", "exec")</div>
 
-<p>Later we will use the <code>grepl</code> function to search through files. This next section of code will format our search terms to fit within <code>grepl</code>
+<p>Later we will use the <code>grepl()</code> function to search through files. This next section of code formats our search terms to fit within <code>grepl()</code>.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">extension_types_re <- paste0(extension_types, "$", collapse = "|") 
 search_terms_re <- paste0(search_terms, collapse = "|")</div>
@@ -117,7 +120,7 @@ search_terms_re <- paste0(search_terms, collapse = "|")</div>
 5 sql-data-warehouse-samples-master/samples/adf/Readme.md                                                    
 6 sql-data-warehouse-samples-master/samples/automation/RefreshReplicatedTable/README.md </div>     
   
-<p>Last, we will read in each file and look for our search terms.  We'll map the <code>read_file()</code> function to each observation of <code>files_to_search</code>.  Next is a filter that keeps any file with text that includes the search terms we are looking for.  We will also use <em>unnest()</em> to put the text into its own variable.
+<p>To start our last chunk of code, we read in each file and look for our search terms.  We'll map the <code>read_file()</code> function to each observation of <code>files_to_search</code>.  Then we filter for any file that has the text we are looking for.  Finally, we will use <em>unnest()</em> to put the text into its own variable.
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">files_identified <- files_to_search %>% 
@@ -137,7 +140,8 @@ search_terms_re <- paste0(search_terms, collapse = "|")</div>
 
 <p>Let me know if you have any feedback - feel free to reach out on Twitter or GitHub. I think there is room for improvement, especially for error handling.  Thank you.
 
-<p>Full code:
+
+<h3 class="article-subtitle" id="fullcode">Full Code</h3>
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">library(tidyverse)
 
