@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Hugo 0.53" />
+
+<title>Harry Ahlas - Efficient Filesearching with R</title>
+<meta property="og:title" content="Harry Ahlas - Efficient Filesearching with R">
+
+<link href='/css/github.min.css' rel='stylesheet' type='text/css' />
+<link rel="stylesheet" href="/css/fonts.css" media="all">
+<link rel="stylesheet" href="/css/main.css" media="all">
+
+  </head>
+  <body>
+    <div class="wrapper">
+      <header class="header">
+        <nav class="nav">
+
+  <a href="/index.html" class="nav-logo"><img src="/images/harryconf.jpg"
+         width="50"
+         height="50"
+         alt="Logo"
+		 style="float: left">
+  </a>
+
+  <ul class="nav-links" style="width: 100%">
+	<!--<li style = "float:left"><a href="/index.html">&nbsp;&nbsp;Harry <br>Ahlas</a></li>-->
+	<li><a href="/about/index.html">About</a></li>
+    <li><a href="https://www.linkedin.com/in/harry-ahlas-b471b7137">LinkedIn</a></li>
+    <li><a href="https://twitter.com/harry_ahlas">Twitter</a></li>
+  </ul>
+
+</nav>
+      </header>
+
+<main class="content" role="main">
+  <article class="article">
+    <span class="article-duration">7 min read</span>
+    <h1 class="article-title">Efficient Filesearching with R</h1>
+
+    <span class="article-date">11/24/2019</span>
+
+	<h3 class="article-subtitle">Searches a files for specific text in specific filetypes</h3>
+
+<p>This script searches a directory or drive for specific text in specific filetypes.  I use it often and thought it is worth sharing.  Here is a link to <a href="https://github.com/harryahlas/file_search/blob/master/file_search.R">the code</a> and to the <a href="https://github.com/harryahlas/file_search">github repository</a>.
+
+<p>When do you use it? On occasion, there are times where you need to look through old work for something.  For example, maybe there is a change to field in a database and you need to understand how it impacts your prior work.  You may want to know which old scripts have that field name.  One option might be to search every file in your drive for that filename. However, you run into two problems when you search through all files: 
+<ul class="task-list">
+<li>searching through every file in a drive could take a very long time to run (days).  
+<li>the result set you return may be larger than what you want.  You may be only interested in .sql scripts but this could be returning other filetypes such as text files or Word documents.
+</ul>
+
+<p>Using this script, you can speed up the search and have a better set of results.
+
+<p>For this exercise, please open <em>RStudio > File > New Project... > Version Control > Git</em>.  Under <em>Repository URL</em> paste https://github.com/harryahlas/file_search.git then click <em>Create Project</em>. Then under the <em>Files</em> tab click <em>file_search.R</em>.
+
+<p>In this example, let's say we are interested in knowing what SQL and README files in the <em>sql-data-warehouse-samples-master</em> directory contain the text "security" or "exec". We only need to search through files ending in either <em>.sql</em> or <em>.md</em>.
+
+<p>Let's walk through the code.  
+
+<p>I am a big fan of the <code>tidyverse</code> workflow; we'll start by loading this package.
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">library(tidyverse)</div>
+
+<p>In this example, we'll search the <em>sql-data-warehouse-samples-master</em> folder.  Note: these files are sourced from https://github.com/Microsoft/sql-data-warehouse-samples.
+
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">directory_to_search <- "sql-data-warehouse-samples-master"</div>
+
+<p>Of course you can switch this to any directory you choose.
+
+<p>Next we'll specify the types of files we want to search.  We are only interested in SQL and README files, so we will look for files that end in either <em>.sql</em> or <em>.md</em>
+
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">extension_types <- c(".sql", ".md")</div>
+
+<p>Now we will specify the terms that we want to search for within each SQL or README file.
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">search_terms <- c("security", "exec")</div>
+
+<p>Later we will use the <code>grepl</code> function to search through files. This next section of code will format our search terms to fit within <code>grepl</code>
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">extension_types_re <- paste0(extension_types, "$", collapse = "|") 
+search_terms_re <- paste0(search_terms, collapse = "|")</div>
+
+<p>This is the end result of the formatting:
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">> extension_types_re
+[1] ".sql$|.md$"
+> search_terms_re
+[1] "security|exec"</div>
+
+<p>Next, we'll get a list of all the files in the directory, including child folders.  We'll put them into a data frame and then filter for filenames ending in <em>.sql</em> or <em>.md</em>.  By searching for only certain filetypes, you could save a lot of time, especially if it is a larger repository.
+
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">files_to_search <- list.files(directory_to_search, recursive = TRUE, full.names = TRUE) %>% 
+  tibble(filenames = .) %>% 
+  filter(grepl(extension_types_re, filenames, ignore.case = TRUE)) </div>
+
+<p>Let's look at <code>files_to_search</code>.
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">files_to_search %>% head()
+# A tibble: 6 x 1
+  filenames                                                                                                  
+  <chr>                                                                                                      
+1 sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDw/readme.md       
+2 sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDwByTimer/readme.md
+3 sql-data-warehouse-samples-master/arm-templates/sqlDwTimerScaler/README.md                                 
+4 sql-data-warehouse-samples-master/samples/adf/management-operations/Readme.md                              
+5 sql-data-warehouse-samples-master/samples/adf/Readme.md                                                    
+6 sql-data-warehouse-samples-master/samples/automation/RefreshReplicatedTable/README.md </div>     
+  
+<p>Last, we will read in each file and look for our search terms.  We'll map the <code>read_file()</code> function to each observation of <code>files_to_search</code>.  Next is a filter that keeps any file with text that includes the search terms we are looking for.  We will also use <em>unnest()</em> to put the text into its own variable.
+
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">files_identified <- files_to_search %>% 
+  mutate(file_text = map(filenames, read_file)) %>% 
+  filter(grepl(search_terms_re, file_text, ignore.case = TRUE)) %>% 
+  unnest(file_text)</div>
+
+<p>And here is our output:
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">files_identified$filenames %>% head()
+[1] "sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDw/readme.md"       
+[2] "sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDwByTimer/readme.md"
+[3] "sql-data-warehouse-samples-master/samples/adf/management-operations/Readme.md"                              
+[4] "sql-data-warehouse-samples-master/samples/adf/Readme.md"                                                    
+[5] "sql-data-warehouse-samples-master/samples/scripts/deployments/GetCreateStatement_Table.sql"                 
+[6] "sql-data-warehouse-samples-master/samples/scripts/monitor/concurrency/running_queued_queries_slots.sql" </div>
+
+<p>Let me know if you have any feedback - feel free to reach out on Twitter or GitHub. I think there is room for improvement, especially for error handling.  Thank you.
+
+<p>Full code:
+<div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
+ 	<pre class="scrollbox-content">library(tidyverse)
+
+# Identify directory to search
+directory_to_search <- "sql-data-warehouse-samples-master"
+
+# Identify filetypes/suffixes to search
+extension_types <- c(".sql", ".md")
+
+# Identify search terms
+search_terms <- c("security", "exec")
+
+# Format search terms and extensions for grepl filter
+extension_types_re <- paste0(extension_types, "$", collapse = "|") 
+search_terms_re <- paste0(search_terms, collapse = "|")
+
+# View
+extension_types_re
+search_terms_re
+
+# Identify files to search
+files_to_search <- list.files(directory_to_search, recursive = TRUE, full.names = TRUE) %>% 
+  tibble(filenames = .) %>% 
+  filter(grepl(extension_types_re, filenames, ignore.case = TRUE)) 
+
+files_to_search %>% head()
+
+# Read files and search
+files_identified <- files_to_search %>% 
+  mutate(file_text = map(filenames, read_file)) %>% 
+  filter(grepl(search_terms_re, file_text, ignore.case = TRUE)) %>% 
+  unnest(file_text)
+
+files_identified$filenames %>% head()</div>
+
+
+    </div>
+  </article>
+
+  
+
+
+</main>
+
+      <footer class="footer">
+        <ul class="footer-links">
+          <!--<li>
+            <a href="/index.xml" type="application/rss+xml" target="_blank">RSS feed</a>
+          </li>-->
+          <li>
+            <a href="https://gohugo.io/" class="footer-links-kudos">Made with <img src="/images/hugo-logo.png" alt="Img link to Hugo website" width="22" height="22"></a>
+          </li>
+        </ul>
+      </footer>
+
+    </div>   
+  </body>
+</html>
+
