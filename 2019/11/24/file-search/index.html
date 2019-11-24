@@ -42,19 +42,24 @@
 
     <span class="article-date">11/24/2019</span>
 
-	<h3 class="article-subtitle">Searches a files for specific text in specific filetypes</h3>
+	<h3 class="article-subtitle">Search files for specific text in specific filetypes</h3>
 
 <p>This script searches a directory or drive for specific text in specific filetypes.  I use it often and thought it is worth sharing.  Here is a link to <a href="https://github.com/harryahlas/file_search/blob/master/file_search.R">the code</a> and to the <a href="https://github.com/harryahlas/file_search">github repository</a>.
 
-<p>When do you use it? On occasion, there are times where you need to look through old work for something.  For example, maybe there is a change to field in a database and you need to understand how it impacts your prior work.  You may want to know which old scripts have that field name.  One option might be to search every file in your drive for that filename. However, you run into two problems when you search through all files: 
+<h3 class="article-subtitle">When to Use this Script</h3>
+<p>On occasion, there are times where you need to look through old work for something.  For example, maybe there is a change to field in a database and you need to understand how it impacts your prior work.  You may want to know which old scripts have that field name.  
+
+<p>One option might be to search every file in your drive for that filename. However, you run into two problems when you search through all files: 
 <ul class="task-list">
-<li>searching through every file in a drive could take a very long time to run (days).  
-<li>the result set you return may be larger than what you want.  You may be only interested in .sql scripts but this could be returning other filetypes such as text files or Word documents.
+<li>A search through every file in a drive could take a very long time to run (days).  
+<li>The result set you return may be larger than what you want.  You may be only interested in .sql scripts but this could be returning other filetypes such as text files or Word documents.
 </ul>
 
 <p>Using this script, you can speed up the search and have a better set of results.
 
-<p>For this exercise, please open <em>RStudio > File > New Project... > Version Control > Git</em>.  Under <em>Repository URL</em> paste https://github.com/harryahlas/file_search.git then click <em>Create Project</em>. Then under the <em>Files</em> tab click <em>file_search.R</em>.
+<h3 class="article-subtitle">An Example</h3>
+
+<p>For this exercise, please open <em>RStudio > File > New Project... > Version Control > Git</em>.  Under <em>Repository URL</em> paste <em>https://github.com/harryahlas/file_search.git</em> then click <em>Create Project</em>. Then under the <em>Files</em> tab click <em>file_search.R</em>.
 
 <p>In this example, let's say we are interested in knowing what SQL and README files in the <em>sql-data-warehouse-samples-master</em> directory contain the text "security" or "exec". We only need to search through files ending in either <em>.sql</em> or <em>.md</em>.
 
