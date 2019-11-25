@@ -44,12 +44,12 @@
 
 	<h3 class="article-subtitle">Search files for specific text in specific filetypes</h3>
 
-<p>This script searches a directory or drive for specific text in specific filetypes.  I use it often and thought it is worth sharing.  Here is a link to <a href="https://github.com/harryahlas/file_search/blob/master/file_search.R">the code</a> and to the <a href="https://github.com/harryahlas/file_search">github repository</a>.  The full code is also available at <a href="#fullcode">the bottom of this page</a>.
+<p>This is a simple script I use often and think it is worth sharing.  It is really good for searching for text within specific types of files.  Here is a link to <a href="https://github.com/harryahlas/file_search/blob/master/file_search.R">the code</a> and to the <a href="https://github.com/harryahlas/file_search">github repository</a>.  The full code is also available at <a href="#fullcode">the bottom of this page</a>.
 
 <h3 class="article-subtitle">When to Use this Script</h3>
 <p>On occasion, there are times where you need to look through old work for something.  For example, maybe there is a change to field in a database and you need to understand how it impacts your prior work.  You may want to know which old scripts have that field name.  
 
-<p>One option might be to search every file in your drive for that filename. However, you run into two problems when you search through all files: 
+<p>One option might be to search every file in your drive for a text phrase. However, you run into two problems when you search through all files: 
 <ul class="task-list">
 <li>A search through every file in a drive could take a very long time to run (days).  
 <li>The result set you return may be larger than what you want.  You may be only interested in .sql scripts but this could be returning other filetypes such as text files or Word documents.
@@ -68,13 +68,13 @@
 <li>Under the <em>Files</em> tab click <em>file_search.R</em>.
 </ol>
 
-<p>In this example, let's say we are interested in knowing what SQL and README files in the <em>sql-data-warehouse-samples-master</em> directory contain the text "security" or "exec". We only need to search through files ending in either <em>.sql</em> or <em>.md</em>.
+<p>In this example, let's say we want to know which files in the <em>sql-data-warehouse-samples-master</em> directory contain either "security" or "exec".  However, we are only interested in SQL scripts and READMEs - files ending in either <em>.sql</em> or <em>.md</em>.
 
 <p>Let's walk through the code.  I am a big fan of the <code>tidyverse</code> workflow; we'll start by loading this package.
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">library(tidyverse)</div>
 
-<p>In this example, we'll search the <em>sql-data-warehouse-samples-master</em> folder.  Note - these files are sourced from <a href="https://github.com/Microsoft/sql-data-warehouse-samples">https://github.com/Microsoft/sql-data-warehouse-samples</a>. Of course you can switch this to any directory you choose.
+<p>In this example, we'll search the <em>sql-data-warehouse-samples-master</em> folder (note: these files are sourced from <a href="https://github.com/Microsoft/sql-data-warehouse-samples">https://github.com/Microsoft/sql-data-warehouse-samples</a>). Of course you can switch this to any directory or drive you choose.
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">directory_to_search <- "sql-data-warehouse-samples-master"</div>
@@ -120,7 +120,7 @@ search_terms_re <- paste0(search_terms, collapse = "|")</div>
 5 sql-data-warehouse-samples-master/samples/adf/Readme.md                                                    
 6 sql-data-warehouse-samples-master/samples/automation/RefreshReplicatedTable/README.md </div>     
   
-<p>To start our last chunk of code, we read in each file and look for our search terms.  We'll map the <code>read_file()</code> function to each observation of <code>files_to_search</code>.  Then we filter for any file that has the text we are looking for.  Finally, we will use <em>unnest()</em> to put the text into its own variable.
+<p>To start our last chunk of code, we read in each of the files we identified and look for our search terms.  We'll map the <code>read_file()</code> function to each observation of <code>files_to_search</code>.  Then we filter for any file that has the text we are looking for.  Finally, we will use <em>unnest()</em> to put the text into its own variable.
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
  	<pre class="scrollbox-content">files_identified <- files_to_search %>% 
