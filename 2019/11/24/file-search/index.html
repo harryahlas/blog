@@ -120,11 +120,19 @@ search_terms_re <- paste0(search_terms, collapse = "|")</div>
 5 sql-data-warehouse-samples-master/samples/adf/Readme.md                                                    
 6 sql-data-warehouse-samples-master/samples/automation/RefreshReplicatedTable/README.md </div>     
   
-<p>To start our last chunk of code, we read in each of the files we identified and look for our search terms.  We'll map the <code>read_file()</code> function to each observation of <code>files_to_search</code>.  Then we filter for any file that has the text we are looking for.  Finally, we will use <em>unnest()</em> to put the text into its own variable.
+<p>To start our last chunk of code, we read in each of the files we identified and look for our search terms.  We'll wrap the <code>read_file()</code> function in a new function <code>read_file_try()</code> in order to handle errors. We'll then run  <code>read_file_try()</code> on each observation of <code>files_to_search</code>.  Then we filter for any file that has the text we are looking for.  Finally, we will use <code>unnest()</code> to put the text into its own variable.
 
 <div class="scrollbox" style="display: grid;height: 100%;" tabindex="0">
- 	<pre class="scrollbox-content">files_identified <- files_to_search %>% 
-  mutate(file_text = map(filenames, read_file)) %>% 
+ 	<pre class="scrollbox-content"># try wrapper
+read_file_try <- function(file_name) {
+  errortest <- try(read_file(file_name), T)
+  output <- if_else(class(errortest) == "try-error", "error", as.character(errortest))
+}
+
+# Read files and search
+files_identified <- files_to_search %>% 
+  add_row(filenames = "x") %>% 
+  mutate(file_text = map(filenames, read_file_try)) %>% 
   filter(grepl(search_terms_re, file_text, ignore.case = TRUE)) %>% 
   unnest(file_text)</div>
 
@@ -138,7 +146,7 @@ search_terms_re <- paste0(search_terms, collapse = "|")</div>
 [5] "sql-data-warehouse-samples-master/samples/scripts/deployments/GetCreateStatement_Table.sql"                 
 [6] "sql-data-warehouse-samples-master/samples/scripts/monitor/concurrency/running_queued_queries_slots.sql" </div>
 
-<p>Let me know if you have any feedback - feel free to reach out on Twitter or GitHub. I think there is room for improvement, especially for error handling.  Thank you.
+<p>Let me know if you have any feedback - feel free to reach out on Twitter or GitHub. 
 
 
 <h3 class="article-subtitle" id="fullcode">Full Code</h3>
@@ -167,11 +175,16 @@ files_to_search <- list.files(directory_to_search, recursive = TRUE, full.names 
   tibble(filenames = .) %>% 
   filter(grepl(extension_types_re, filenames, ignore.case = TRUE)) 
 
-files_to_search %>% head()
+# try wrapper
+read_file_try <- function(file_name) {
+  errortest <- try(read_file(file_name), T)
+  output <- if_else(class(errortest) == "try-error", "error", as.character(errortest))
+}
 
 # Read files and search
 files_identified <- files_to_search %>% 
-  mutate(file_text = map(filenames, read_file)) %>% 
+  add_row(filenames = "x") %>% 
+  mutate(file_text = map(filenames, read_file_try)) %>% 
   filter(grepl(search_terms_re, file_text, ignore.case = TRUE)) %>% 
   unnest(file_text)
 
