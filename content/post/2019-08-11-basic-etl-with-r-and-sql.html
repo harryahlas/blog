@@ -1,0 +1,196 @@
+---
+title: Basic ETL with R and SQL
+author: Harry Ahlas
+date: '2019-08-11'
+slug: basic-etl-with-r-and-sql
+categories: []
+tags: []
+---
+
+
+
+<div id="create-a-calendar-table-from-point-in-time-data" class="section level2">
+<h2>Create a Calendar Table from Point In Time Data</h2>
+<p>Today we will dive into ETL by taking the following steps:</p>
+<ul>
+<li><strong>E</strong>xtract data from a point in time table</li>
+<li><strong>T</strong>ransform the extract into a monthly table</li>
+<li><strong>L</strong>oad the data back to the database</li>
+</ul>
+<p>For this exercise we will use R and SQLite. I like the simplicity of SQLite. It is very fast for this type of database and easy to install, though there are some drawbacks that we will touch upon.</p>
+<p>The raw R script is <a href="https://github.com/harryahlas/sample-hr-database/blob/master/analysis/pit_to_calendar.R">here</a>.</p>
+<p>These are the CRAN packages we will need:</p>
+<pre class="r"><code>library(tidyverse)
+library(RSQLite)
+library(lubridate)</code></pre>
+<p>We will start by installing the ficticious <em>hrsample</em> HR database (<a href="http://harry.ahlas.com/2019/03/17/hrsample-database/index.html">hrsample blog NEEDS UPDATED LINK</a>). If you went through my earlier blog entry, <a href="http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/index.html">Multi-Condition Data Retrieval NEEDS UPDATED LINK</a>, you can continue to use that same database and skip this next step.</p>
+<pre class="r"><code>#devtools::install_github(&quot;harryahlas/hrsample&quot;)
+hrsample::hrsampleCreateSQLite(&quot;my_db.sqlite3&quot;)</code></pre>
+<div id="extract" class="section level3">
+<h3>Extract</h3>
+<p>Let’s connect to the database.</p>
+<pre class="r"><code>con &lt;- dbConnect(SQLite(),&#39;my_db.sqlite3&#39;)</code></pre>
+<p>The first table we will need to extract is the “deskhistory” table. We will import it into an object called <code>dh</code>.</p>
+<pre class="r"><code>dh &lt;- dbGetQuery(con, &quot;SELECT * FROM DESKHISTORY&quot;)</code></pre>
+<p>Let’s look a little closer at a sample of the <code>dh</code> (<em>deskhistory</em>) table.</p>
+<pre class="r"><code>sample_employee_num &lt;- sample(dh$employee_num,1)
+dh %&gt;% filter(employee_num == sample_employee_num)
+  employee_num desk_id desk_id_start_date desk_id_end_date termination_flag promotion_flag
+1        14447     535         2003-12-12       2006-10-26                0              0
+2        14447     535         2006-10-27       2009-07-23                0              1
+3        14447     535         2009-07-24       2011-11-04                0              1
+4        14447     535         2011-11-05       2014-12-15                1              1</code></pre>
+<p>The deskhistory data is a transactional, point-in-time table. It shows one row for each instance an employee was in a <code>desk_id</code> (aka position). It includes a start date <code>desk_id_start_date</code> and end date <code>desk_id_end_date</code>.</p>
+<p>Our goal is to convert this point in time data in to a monthly snapshot, which can be very useful for reporting and analysis. The monthly table will have one row for each month the employee is in a <code>desk_id</code>.</p>
+</div>
+<div id="transform" class="section level3">
+<h3>Transform</h3>
+<p>One of the drawbacks of SQLite is that it does not store date formats. So our first transform will be to convert the date fields from text into dates. We will also remove the <code>promotion_flag</code> variable since it is not needed here.</p>
+<pre class="r"><code>dh &lt;- dh %&gt;% 
+  mutate(desk_id_start_date = as.Date(desk_id_start_date),
+         desk_id_end_date = as.Date(desk_id_end_date)) %&gt;% 
+  select(-promotion_flag)</code></pre>
+<p>Next, let’s create an empty data frame that we will populate with our monthly calendar data.</p>
+<pre class="r"><code>dh_trend &lt;- tibble()</code></pre>
+<p>We need to create a list of all months that will be included in our calendar table data.</p>
+<pre class="r"><code>start_date &lt;- as.Date(&quot;1999-01-01&quot;)
+end_date &lt;- as.Date(&quot;2018-12-31&quot;)  
+month_list &lt;- seq.Date(start_date, end_date, by = &quot;month&quot;)
+
+month_list[1:5]
+[1] &quot;1999-01-01&quot; &quot;1999-02-01&quot; &quot;1999-03-01&quot; &quot;1999-04-01&quot; &quot;1999-05-01&quot;</code></pre>
+<p>Now we are ready to do the real work - creating the new data. To do so, we will create a for loop that:</p>
+<ul>
+<li>Iterates through each month in our list of months</li>
+<li>Identifies the employees that were active as of the last day of that month</li>
+<li>Identifies the employees that terminated during that month</li>
+<li>Adds rows to our table for these active and terminated employees</li>
+<li>Adds a <code>trend_month</code> field representing month the employee was in the company</li>
+</ul>
+<p>Here is the code for our loop. We’ll review it in more detail in a minute.</p>
+<pre class="r"><code>for (i in 1:length(month_list)) {
+  dh_trend_active &lt;- dh %&gt;% 
+    filter(desk_id_start_date &lt;= ceiling_date(month_list[i], &quot;month&quot;) - 1,
+           desk_id_end_date &gt;= ceiling_date(month_list[i], &quot;month&quot;) - 1) %&gt;% 
+    filter(termination_flag == 0 | desk_id_end_date != ceiling_date(month_list[i], &quot;month&quot;) - 1) %&gt;% 
+    mutate(trend_month = month_list[i],
+           termination_flag = 0)
+  
+  dh_trend_term &lt;- dh %&gt;% 
+    filter(termination_flag == 1,
+           desk_id_end_date &lt;= ceiling_date(month_list[i], &quot;month&quot;) - 1,
+           desk_id_end_date &gt;= month_list[i]
+           ) %&gt;% 
+    mutate(trend_month = month_list[i])
+  
+  dh_trend &lt;- bind_rows(dh_trend, dh_trend_active, dh_trend_term)
+}</code></pre>
+<p>Let’s take a look at a small sample of our new monthly calendar data:</p>
+<pre class="r"><code>dh_trend %&gt;% sample_n(3)
+# A tibble: 3 x 6
+  employee_num desk_id desk_id_start_date desk_id_end_date termination_flag trend_month
+                                                      
+1         2690     524 2010-11-04         2015-01-17                      0 2014-09-01 
+2          762     503 2006-04-07         2009-02-23                      0 2006-10-01 
+3        24996     813 2002-08-23         2007-08-06                      0 2003-02-01 </code></pre>
+<p>Every employee has a row for each month they were active. Note the new <code>trend_month</code> field. A more detailed look at the for loop code is below. Feel free to skip ahead.</p>
+</div>
+<div id="inside-the-for-loop" class="section level3">
+<h3>Inside the for loop</h3>
+<p>The first piece of the for loop specifies how many loops to run. This is the number of months in our list of months (<code>month_list</code>)</p>
+<pre class="r"><code>for (i in 1:length(month_list)) {</code></pre>
+<p>Then we create a temporary data frame <code>dh_trend_active</code> that captures active employees for the month in the current iteration. The code looks at the <code>desk_id_start_date</code> and <code>desk_id_end_date</code> columns to determine if an employee was active during that month.</p>
+<pre class="r"><code>dh_trend_active &lt;- dh %&gt;% 
+    filter(desk_id_start_date &lt;= ceiling_date(month_list[i], &quot;month&quot;) - 1,
+           desk_id_end_date &gt;= ceiling_date(month_list[i], &quot;month&quot;) - 1) %&gt;% </code></pre>
+<p>The code above excludes employees who terminated during the month unless they terminated on the last day of the month. We need to exclude those end of month terminations here, otherwise they will be doublecounted with the terminations piece coming up. So we’ll filter them out with this “link” in the dplyr chain:</p>
+<pre class="r"><code>filter(termination_flag == 0 
+    | desk_id_end_date != ceiling_date(month_list[i], &quot;month&quot;) - 1) %&gt;% </code></pre>
+<p>The next piece of this chain creates a new column for the month and recodes the <code>termination_flag</code> to 0 since these employees were all active during that month.</p>
+<pre class="r"><code>mutate(trend_month = month_list[i],
+           termination_flag = 0)</code></pre>
+<p>The loop repeats a nearly identical process for terminated employees. The key difference is that we are filtering for “termination” rows: where the job was the employee’s last prior to terminating (<code>termination_flag == 1</code>).</p>
+<pre class="r"><code>dh_trend_term &lt;- dh %&gt;% 
+  filter(termination_flag == 1,
+         desk_id_end_date &lt;= ceiling_date(month_list[i], &quot;month&quot;) - 1,
+         desk_id_end_date &gt;= month_list[i]
+  ) %&gt;% 
+  mutate(trend_month = month_list[i])</code></pre>
+<p>The last piece of the loop binds the new rows to our <code>dh_trend</code> table:</p>
+<pre class="r"><code>dh_trend &lt;- bind_rows(dh_trend, dh_trend_active, dh_trend_term)</code></pre>
+</div>
+<div id="additional-transformation" class="section level3">
+<h3>Additional Transformation</h3>
+<p>Our new monthly calendar data produced by the for loop looks okay but we can enhance it. We can make it fit with the SQLite specs and make it more useful by adding additional fields.</p>
+<p>As mentioned earlier, SQLite does not support date formats. So we have to reformat the three date columns back to text.</p>
+<pre class="r"><code>dh_trend$desk_id_start_date &lt;- format(dh_trend$desk_id_start_date, &quot;%Y-%m-%d&quot;)
+dh_trend$desk_id_end_date &lt;- format(dh_trend$desk_id_end_date, &quot;%Y-%m-%d&quot;)
+dh_trend$trend_month &lt;- format(dh_trend$trend_month, &quot;%Y-%m-%d&quot;)</code></pre>
+<p>To increase the value of this calendar data, we’ll add job names to our data. Each <code>desk_id</code> has a job assigned to it. That assignment is on the <code>deskjob</code> table.</p>
+<pre class="r"><code>dj &lt;- dbGetQuery(con, &quot;SELECT * FROM DESKJOB&quot;)
+dh_trend &lt;- dh_trend %&gt;% 
+  left_join(dj)</code></pre>
+<p>Adding an organizational rollup hierarchy will make this table more valuable for reporting. This organizational information will enable us to report on individual lines of business/business groups. We can retrieve org information from the <code>rollup</code> table.</p>
+<pre class="r"><code>ru &lt;- dbGetQuery(con, &quot;SELECT * FROM ROLLUP&quot;)</code></pre>
+<p>While the rollup table has a lot of useful information that will come in handy for monthly reporting, we can remove the CEO level columns since they are the same for everyone and do not add value.</p>
+<pre class="r"><code>ru &lt;- ru %&gt;% 
+  select(-lvl00_desk_id, - lvl00_org)</code></pre>
+<p>Now join the hierarchy rollup data:</p>
+<pre class="r"><code>dh_trend &lt;- dh_trend %&gt;% 
+  left_join(ru, by = c(&quot;desk_id&quot; = &quot;lvl04_desk_id&quot;))</code></pre>
+<p>Let’s also add the employee’s name from the <code>employeeinfo</code> table.</p>
+<pre class="r"><code>ei &lt;- dbGetQuery(con, &quot;SELECT * FROM EMPLOYEEINFO&quot;)
+dh_trend &lt;- dh_trend %&gt;% 
+  left_join(ei %&gt;% select(employee_num,
+                          last_name,
+                          first_name))</code></pre>
+<p>Our last transformation is to simply reorder some of the columns.</p>
+<pre class="r"><code>dh_trend &lt;- dh_trend %&gt;% 
+  select(trend_month,
+         employee_num,
+         last_name,
+         first_name, 
+         job_name,
+         depth,
+         everything())</code></pre>
+<p>Our data is now transformed into calendar format with all the desired fields and formatting. Let’s take a look before we load the data.</p>
+<pre class="r"><code>dh_trend %&gt;% sample_n(3)
+# A tibble: 3 x 17
+  trend_month employee_num last_name first_name job_name depth desk_id desk_id_start_d~ desk_id_end_date
+                                                           
+1 2001-09-01         21823 Carthen   Leesa      Salespe~     4     511 1999-01-01       2001-11-04      
+2 2005-02-01         37797 Karley    Jessica    Product~     4    1096 2005-02-06       2007-05-08      
+3 1999-03-01         18859 Manvelito Rogelio    Consult~     4     224 1999-01-01       2004-06-19      
+# ... with 8 more variables: termination_flag , lvl01_desk_id , lvl01_org , lvl02_desk_id ,
+#   lvl02_org , lvl03_desk_id , lvl03_org , lvl04_org </code></pre>
+</div>
+<div id="load" class="section level3">
+<h3>Load</h3>
+<p>Our last step is to upload the data to a new table to our database. We will call the table <code>employee_trend</code>. I love how easy it is to load data using R:</p>
+<pre class="r"><code>dbWriteTable(con, &quot;employee_trend&quot;, dh_trend, overwrite = TRUE)</code></pre>
+<p>Finally, let’s retrieve a sample of our results.</p>
+<pre class="r"><code>et_sample &lt;- dbGetQuery(con, &quot;SELECT * FROM EMPLOYEE_TREND ORDER BY RANDOM() LIMIT 3&quot;)
+glimpse(et_sample)
+Observations: 3
+Variables: 17
+$ trend_month         &quot;2002-02-01&quot;, &quot;2008-08-01&quot;, &quot;2007-10-01&quot;
+$ employee_num        26962, 33111, 9524
+$ last_name           &quot;Reade&quot;, &quot;Turri&quot;, &quot;Douet&quot;
+$ first_name          &quot;Melvyn&quot;, &quot;Denver&quot;, &quot;Keegan&quot;
+$ job_name            &quot;Developer&quot;, &quot;Paralegal&quot;, &quot;Salesperson&quot;
+$ depth               4, 4, 4
+$ desk_id             1032, 875, 504
+$ desk_id_start_date  &quot;2001-11-30&quot;, &quot;2006-06-28&quot;, &quot;2007-06-25&quot;
+$ desk_id_end_date    &quot;2002-08-02&quot;, &quot;2008-12-21&quot;, &quot;2008-06-29&quot;
+$ termination_flag    0, 0, 0
+$ lvl01_desk_id       7, 6, 4
+$ lvl01_org           &quot;Technology&quot;, &quot;Legal&quot;, &quot;Sales&quot;
+$ lvl02_desk_id       39, 29, 25
+$ lvl02_org           &quot;Tchnlgy - Data Science&quot;, &quot;Lgl - Product&quot;, &quot;Sls - South&quot;
+$ lvl03_desk_id       169, 138, 61
+$ lvl03_org           &quot;Tchnlgy - Dt Scnc - RAA&quot;, &quot;Lgl - Prdct - PSI&quot;, &quot;Sls - Sth - Florida&quot;
+$ lvl04_org           &quot;Tchnlgy - Dt Scnc - RAA - IC01&quot;, &quot;Lgl - Prdct - PSI - IC01&quot;, &quot;Sls - Sth - Florida -...</code></pre>
+<p>Looks good! I hope you found this exercise valuable. Thank you for taking the time to read this. Please don’t hesitate to reach out to me via Twitter with any questions/comments/suggestions. And don’t forget to close the connection:</p>
+<pre class="r"><code>dbDisconnect(con)</code></pre>
+</div>
+</div>

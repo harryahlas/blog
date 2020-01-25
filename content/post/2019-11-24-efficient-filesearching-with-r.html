@@ -1,0 +1,132 @@
+---
+title: Efficient Filesearching with R
+author: Harry Ahlas
+date: '2019-11-24'
+slug: efficient-filesearching-with-r
+categories: []
+tags: []
+---
+
+
+
+<div id="search-files-for-specific-text-in-specific-filetypes" class="section level1">
+<h1>Search files for specific text in specific filetypes</h1>
+<p>This is a simple script I use often and think it is worth sharing. It is really good for searching for text within specific types of files. Here is a link to the code and to the github repository. The full code is also available at the bottom of this page.</p>
+<div id="when-to-use-this-script" class="section level2">
+<h2>When to Use this Script</h2>
+<p>On occasion, there are times where you need to look through old work for something. For example, maybe there is a change to field in a database and you need to understand how it impacts your prior work. You may want to know which old scripts have that field name.</p>
+<p>One option might be to search every file in your drive for a text phrase. However, you run into two problems when you search through all files:</p>
+<ul>
+<li>A search through every file in a drive could take a very long time to run (days).</li>
+<li>The result set you return may be larger than what you want. You may be only interested in .sql scripts but this could be returning other filetypes such as text files or Word documents.
+Using this script, you can speed up the search and have a better set of results.</li>
+</ul>
+</div>
+<div id="an-example" class="section level2">
+<h2>An Example</h2>
+<p>For this exercise, please open a new RStudio project:</p>
+<ol style="list-style-type: decimal">
+<li>Open RStudio</li>
+<li><em>File &gt; New Project… &gt; Version Control &gt; Git</em></li>
+<li>Under <em>Repository URL</em> paste <a href="https://github.com/harryahlas/file_search.git" class="uri">https://github.com/harryahlas/file_search.git</a></li>
+<li>Click <em>Create Project</em></li>
+<li>Under the <em>Files</em> tab click <em>file_search.R</em>.</li>
+</ol>
+<p>In this example, let’s say we want to know which files in the sql-data-warehouse-samples-master directory contain either “security” or “exec”. However, we are only interested in SQL scripts and READMEs - files ending in either .sql or .md.</p>
+<p>Let’s walk through the code. I am a big fan of the tidyverse workflow; we’ll start by loading this package.</p>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<p>In this example, we’ll search the <em>sql-data-warehouse-samples-master</em> folder (note: these files are sourced from <a href="https://github.com/Microsoft/sql-data-warehouse-samples" class="uri">https://github.com/Microsoft/sql-data-warehouse-samples</a>). Of course you can switch this to any directory or drive you choose.</p>
+<pre class="r"><code>directory_to_search &lt;- &quot;sql-data-warehouse-samples-master&quot;</code></pre>
+<p>Next we’ll specify the types of files we want to search. We are only interested in SQL and README files, so we will look for files that end in either .sql or .md.</p>
+<pre class="r"><code>extension_types &lt;- c(&quot;.sql&quot;, &quot;.md&quot;)</code></pre>
+<p>Now we will specify the terms that we want to search for within each SQL or README file, “security” and “exec”.</p>
+<pre class="r"><code>search_terms &lt;- c(&quot;security&quot;, &quot;exec&quot;)</code></pre>
+<p>Later we will use the <code>grepl()</code> function to search through files. This next section of code formats our search terms to fit within <code>grepl()</code>.</p>
+<pre class="r"><code>extension_types_re &lt;- paste0(extension_types, &quot;$&quot;, collapse = &quot;|&quot;) 
+search_terms_re &lt;- paste0(search_terms, collapse = &quot;|&quot;)</code></pre>
+<p>This is the end result of the formatting:</p>
+<pre class="r"><code>&gt; extension_types_re
+[1] &quot;.sql$|.md$&quot;
+&gt; search_terms_re
+[1] &quot;security|exec&quot;</code></pre>
+<p>Next, we’ll get a list of all the files in the directory, including child folders. We’ll put them into a data frame and then filter for filenames ending in .sql or .md. By searching for only certain filetypes, you could save a lot of time, especially if it is a larger repository.</p>
+<pre class="r"><code>files_to_search &lt;- list.files(directory_to_search, recursive = TRUE, full.names = TRUE) %&gt;% 
+  tibble(filenames = .) %&gt;% 
+  filter(grepl(extension_types_re, filenames, ignore.case = TRUE)) </code></pre>
+<p>Let’s look at <code>files_to_search</code>.</p>
+<pre class="r"><code>files_to_search %&gt;% head()
+# A tibble: 6 x 1
+  filenames                                                                                                  
+                                                                                                        
+1 sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDw/readme.md       
+2 sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDwByTimer/readme.md
+3 sql-data-warehouse-samples-master/arm-templates/sqlDwTimerScaler/README.md                                 
+4 sql-data-warehouse-samples-master/samples/adf/management-operations/Readme.md                              
+5 sql-data-warehouse-samples-master/samples/adf/Readme.md                                                    
+6 sql-data-warehouse-samples-master/samples/automation/RefreshReplicatedTable/README.md </code></pre>
+<p>To start our last chunk of code, we read in each of the files we identified and look for our search terms. We’ll wrap the <code>read_file()</code> function in a new function <code>read_file_try()</code> in order to handle errors. We’ll then run <code>read_file_try()</code> on each observation of files_to_search. Then we filter for any file that has the text we are looking for. Finally, we will use <code>unnest()</code> to put the text into its own variable.</p>
+<pre class="r"><code># try wrapper
+read_file_try &lt;- function(file_name) {
+  errortest &lt;- try(read_file(file_name), T)
+  output &lt;- if_else(class(errortest) == &quot;try-error&quot;, &quot;error&quot;, as.character(errortest))
+}
+
+# Read files and search
+files_identified &lt;- files_to_search %&gt;% 
+  add_row(filenames = &quot;x&quot;) %&gt;% 
+  mutate(file_text = map(filenames, read_file_try)) %&gt;% 
+  filter(grepl(search_terms_re, file_text, ignore.case = TRUE)) %&gt;% 
+  unnest(file_text)
+And here is our output:
+
+files_identified$filenames %&gt;% head()
+[1] &quot;sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDw/readme.md&quot;       
+[2] &quot;sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDwByTimer/readme.md&quot;
+[3] &quot;sql-data-warehouse-samples-master/samples/adf/management-operations/Readme.md&quot;                              
+[4] &quot;sql-data-warehouse-samples-master/samples/adf/Readme.md&quot;                                                    
+[5] &quot;sql-data-warehouse-samples-master/samples/scripts/deployments/GetCreateStatement_Table.sql&quot;                 
+[6] &quot;sql-data-warehouse-samples-master/samples/scripts/monitor/concurrency/running_queued_queries_slots.sql&quot; </code></pre>
+<p>Let me know if you have any feedback - feel free to reach out on Twitter or GitHub.</p>
+<div id="full-code" class="section level3">
+<h3>Full Code</h3>
+<pre class="r"><code>library(tidyverse)
+
+# Identify directory to search
+directory_to_search &lt;- &quot;sql-data-warehouse-samples-master&quot;
+
+# Identify filetypes/suffixes to search
+extension_types &lt;- c(&quot;.sql&quot;, &quot;.md&quot;)
+
+# Identify search terms
+search_terms &lt;- c(&quot;security&quot;, &quot;exec&quot;)
+
+# Format search terms and extensions for grepl filter
+extension_types_re &lt;- paste0(extension_types, &quot;$&quot;, collapse = &quot;|&quot;) 
+search_terms_re &lt;- paste0(search_terms, collapse = &quot;|&quot;)
+
+# View
+extension_types_re
+search_terms_re
+
+# Identify files to search
+files_to_search &lt;- list.files(directory_to_search, recursive = TRUE, full.names = TRUE) %&gt;% 
+  tibble(filenames = .) %&gt;% 
+  filter(grepl(extension_types_re, filenames, ignore.case = TRUE)) 
+
+# try wrapper
+read_file_try &lt;- function(file_name) {
+  errortest &lt;- try(read_file(file_name), T)
+  output &lt;- if_else(class(errortest) == &quot;try-error&quot;, &quot;error&quot;, as.character(errortest))
+}
+
+# Read files and search
+files_identified &lt;- files_to_search %&gt;% 
+  add_row(filenames = &quot;x&quot;) %&gt;% 
+  mutate(file_text = map(filenames, read_file_try)) %&gt;% 
+  filter(grepl(search_terms_re, file_text, ignore.case = TRUE)) %&gt;% 
+  unnest(file_text)
+
+files_identified$filenames %&gt;% head()</code></pre>
+</div>
+</div>
+</div>
