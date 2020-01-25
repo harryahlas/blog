@@ -1,0 +1,33 @@
+---
+title: Upload an Entire Directory through SFTP with R
+author: Harry Ahlas
+date: '2019-07-28'
+slug: upload-an-entire-directory-through-sftp-with-r
+categories: []
+tags: []
+---
+
+
+
+<p>I wanted to speed up the process of uploading this website to the hosting server, as opposed to doing a lot of drag and drop to the ftp client. It turned out to be super easy using R. If you need to do the same, the following code can help get you there. It will replace old files and directories and create new ones as needed.</p>
+<p>Simply set your working directory to the root directory that holds the folders/files you want to upload. Then do the following:</p>
+<ul>
+<li>Replace <code>User</code> with your username</li>
+<li>Replace <code>Password</code> with your password</li>
+<li>Replace <code>FTPServer</code> with the server name</li>
+<li>Replace <code>your_directory_name</code> with the root directory on the server you want to update</li>
+<li>Run the code below and you are golden.</li>
+</ul>
+<pre class="r"><code>library(RCurl)
+
+files_for_upload &lt;- list.files(getwd(), 
+                             full.names=F,
+                             recursive = TRUE)
+
+for (file_for_upload in files_for_upload) {
+  print(file_for_upload)
+  ftpUpload(file_for_upload, paste0(&quot;sftp://User:Password@FTPServer/your_directory_name/&quot;,
+                                              file_for_upload),
+                      .opts = list(ftp.create.missing.dirs=TRUE)
+            )
+}</code></pre>

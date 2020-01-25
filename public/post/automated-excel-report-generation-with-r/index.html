@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Harry Ahlas">
+<meta name="description" content="People analytics, music, and audio engineering. Views are my own.">
+<meta name="generator" content="Hugo 0.62.2" />
+<title>Automated Excel Report Generation with R</title>
+<link rel="shortcut icon" href="/images/favicon2.ico">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+
+<link rel="stylesheet" href="/css/monosocialiconsfont.css">
+
+
+
+
+<meta property="og:title" content="Automated Excel Report Generation with R" />
+<meta property="og:description" content="This post is a follow-up to my earlier post, Use R to add a Data Disclaimer to an Excel Report NEEDS EDIT————-. In that post, we created a single enterprise-wide human resources report along with a data disclaimer.
+Here we will automate that same report and generate 1 report for each of the 9 lines of business that report to the CEO of the same fictitious company. So one report for each leader who reports directly to the CEO." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/automated-excel-report-generation-with-r/" />
+<meta property="article:published_time" content="2019-04-28T00:00:00+00:00" />
+<meta property="article:modified_time" content="2019-04-28T00:00:00+00:00" />
+
+
+<meta itemprop="name" content="Automated Excel Report Generation with R">
+<meta itemprop="description" content="This post is a follow-up to my earlier post, Use R to add a Data Disclaimer to an Excel Report NEEDS EDIT————-. In that post, we created a single enterprise-wide human resources report along with a data disclaimer.
+Here we will automate that same report and generate 1 report for each of the 9 lines of business that report to the CEO of the same fictitious company. So one report for each leader who reports directly to the CEO.">
+<meta itemprop="datePublished" content="2019-04-28T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-04-28T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="1136">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Automated Excel Report Generation with R"/>
+<meta name="twitter:description" content="This post is a follow-up to my earlier post, Use R to add a Data Disclaimer to an Excel Report NEEDS EDIT————-. In that post, we created a single enterprise-wide human resources report along with a data disclaimer.
+Here we will automate that same report and generate 1 report for each of the 9 lines of business that report to the CEO of the same fictitious company. So one report for each leader who reports directly to the CEO."/>
+<meta name="twitter:site" content="@https://www.twitter.com/harry_ahlas"/>
+
+
+    </head>
+<body>
+    <nav class="main-nav">
+	
+		<a href='/'> <span class="arrow">←</span>Home</a>
+	
+
+	
+ 		<a href='/about/'>About</a>
+  	
+
+	
+</nav>
+
+    <section id="wrapper">
+        
+        
+<article class="post">
+    <header>
+        <h1>Automated Excel Report Generation with R</h1>
+        <h2 class="subtitle"></h2>
+        <h2 class="headline">
+        April 28, 2019
+        <br>
+        
+        </h2>
+    </header>
+    <section id="post-body">
+        
+
+
+<p>This post is a follow-up to my earlier post, <a href="http://harry.ahlas.com/2019/04/07/information-security-tab/index.html">Use R to add a Data Disclaimer to an Excel Report</a> <strong>NEEDS EDIT————-</strong>. In that post, we created a single enterprise-wide human resources report along with a data disclaimer.</p>
+<p>Here we will automate that same report and generate 1 report for each of the 9 lines of business that report to the CEO of the same fictitious company. So one report for each leader who reports directly to the CEO.</p>
+<p>We will reuse much of the same code as before. It would be a good idea to read through the exercise in the link above if you have not yet already.</p>
+<p>First, let’s load our libraries, update our variables, and import our data.</p>
+<pre class="r"><code>#devtools::install_github(&quot;harryahlas/hrsample&quot;)
+library(hrsample)
+library(tidyverse)
+library(scales)
+library(lubridate)
+library(openxlsx)
+
+# Tracking information
+as_of_date &lt;- Sys.Date()
+report_name &lt;- &quot;PA73405 - Attrition by Job 2009&quot;</code></pre>
+<p>In the previous exercise, we simply aggregated across the company. However, this task is a little more complex. We want to break this data out by line of business (LOB), so we need to add hierarchy information that will tell us which employees rollup to each department leader. To do this, we will import a new view called <code>rollup_view</code>.</p>
+<pre class="r"><code>glimpse(rollup_view, width = 70)
+    
+Observations: 1,233
+Variables: 11
+$ lvl00_desk_id  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1...
+$ lvl00_org      &quot;CEO&quot;, &quot;CEO&quot;, &quot;CEO&quot;, &quot;CEO&quot;, &quot;CEO&quot;, &quot;CEO&quot;, &quot;...
+$ lvl01_desk_id  1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 2, 4, 6, 7, ...
+$ lvl01_org      &quot;CEO&quot;, &quot;Human Resources&quot;, &quot;Sales&quot;, &quot;Marketi...
+$ lvl02_desk_id  1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 14, 26, 30, ...
+$ lvl02_org      &quot;CEO&quot;, &quot;Human Resources&quot;, &quot;Sales&quot;, &quot;Marketi...
+$ lvl03_desk_id  1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 14, 26, 30, ...
+$ lvl03_org      &quot;CEO&quot;, &quot;Human Resources&quot;, &quot;Sales&quot;, &quot;Marketi...
+$ lvl04_desk_id  1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 14, 26, 30, ...
+$ lvl04_org      &quot;CEO&quot;, &quot;Human Resources&quot;, &quot;Sales&quot;, &quot;Marketi...
+$ depth          0.000000e+00, 4.940656e-324, 4.940656e-324,...</code></pre>
+<p>As mentioned earlier, the original report we created was for the CEO (<code>lvl00_org</code>). Here, we want to break out multiple reports for each department (<code>lvl01_org</code>). Here are the names of these departments, along with a count of employee <code>desk_id</code>s:</p>
+<pre class="r"><code>rollup_view %&gt;% count(lvl01_org) %&gt;% arrange(desc(n))
+    
+    # A tibble: 7 x 2
+  lvl01_org           n
+  &lt;chr&gt;           &lt;int&gt;
+ 1 Sales             488
+ 2 Technology        158
+ 3 Human Resources   119
+ 4 Compliance         89
+ 5 Operations         85
+ 6 Legal              83
+ 7 Finance            73
+ 8 Strategy           70
+ 9 Marketing          67
+10 CEO                 1</code></pre>
+<p>You can see Sales has the highest number of employees, followed by Technology.</p>
+<div id="join-data-to-hierarchy" class="section level3">
+<h3>Join data to hierarchy</h3>
+<p>Next, we’ll join our raw data, <code>deskhistory_table</code>, to <code>rollup_view.</code> <code>deskhistory_table</code> captures the start and end dates for each employee’s job. It also captures whether the job resulted in a termination. Each employee (<code>employee_num</code>) sits at a unique <code>desk_id</code>, which rolls up to one of the 7 lines of business.</p>
+<pre class="r"><code>deskhistory_table_hierarchy &lt;- deskhistory_table %&gt;% 
+  left_join(rollup_view %&gt;% select(lvl01_desk_id,
+                                            lvl01_org,
+                                            lvl04_desk_id) %&gt;% distinct(), 
+            by = c(&quot;desk_id&quot; = &quot;lvl04_desk_id&quot;))
+
+glimpse(deskhistory_table_hierarchy[sample(1:nrow(deskhistory_table_hierarchy)),], width = 70)
+
+Observations: 4,724
+Variables: 8
+$ employee_num        2712, 7430, 8024, 4110, 40481, 34383, ...
+$ desk_id             1116, 615, 188, 439, 676, 650, 370, 83...
+$ desk_id_start_date  2018-12-26, 1999-01-01, 2011-07-21, 2...
+$ desk_id_end_date    2999-01-01, 2003-03-21, 2018-07-16, 2...
+$ termination_flag    0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1,...
+$ promotion_flag      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,...
+$ lvl01_desk_id       9, 4, 9, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,...
+$ lvl01_org           &quot;Operations&quot;, &quot;Sales&quot;, &quot;Operations&quot;, &quot;...</code></pre>
+<p>Our new table, <code>deskhistory_table_hierarchy</code>, includes all the desk history information along with the LOB name, <code>lvl01_org.</code></p>
+</div>
+<div id="use-a-loop" class="section level3">
+<h3>Use a loop</h3>
+<p>We’ll use a loop to create one report for each LOB. So one report for each <code>lvl01_org</code> value.</p>
+<p>To start, let’s create a data frame called <code>LOB_list</code> that has each of the 7 LOBs as well as the desk id for each LOB leader: <code>lvl01_desk_id.</code> The plan is to loop through each row/LOB in this data frame and create a new report during each loop.</p>
+<pre class="r"><code>LOB_list &lt;- rollup_view %&gt;% 
+  select(lvl01_org, lvl01_desk_id) %&gt;% 
+  distinct() %&gt;% 
+  filter(lvl01_org != &quot;CEO&quot;)
+
+LOB_list
+
+# A tibble: 7 x 2
+  lvl01_org       lvl01_desk_id
+  &lt;chr&gt;                   &lt;int&gt;
+1 Human Resources             3
+2           Sales             4
+3       Marketing             5
+4           Legal             6
+5      Technology             7
+6        Strategy             8
+7      Operations             9
+8         Finance             2
+9      Compliance            10</code></pre>
+<p>Now that we have something to loop through, we can start on the loop.</p>
+<pre class="r"><code>for (i in (1:length(LOB_list$lvl01_org))) {</code></pre>
+<p>Note the variable <code>i</code> will start at 1 and increase each time we run through the loop until it reaches the last row (row 9 for Compliance) in <code>LOB_list.</code></p>
+<pre class="r"><code>org_name &lt;- LOB_list$lvl01_org[i]</code></pre>
+<p>The code we are going to cycle through in each loop is nearly identical to our previous entry’s enterprise-wide report. The first addition is <code>filter(lvl01_org == LOB_list$lvl01_org[i]) %&gt;%</code>. In the code below, you can see this line filters the report for rows that roll up to the LOB that the loop is currently running through. Again, refer to the previous exercise for more detail about the code below.</p>
+<pre class="r"><code>hcto_summary &lt;- deskhistory_table_hierarchy %&gt;% 
+        filter(lvl01_org == LOB_list$lvl01_org[i]) %&gt;% 
+    left_join(deskjob_table) %&gt;% 
+    filter(desk_id_start_date &lt;= as.Date(&quot;2009-12-31&quot;),
+           desk_id_end_date &gt;= as.Date(&quot;2009-01-01&quot;)) %&gt;% 
+    arrange(desc(desk_id_end_date)) %&gt;% 
+    group_by(employee_num) %&gt;% 
+    filter(row_number() == 1) %&gt;% 
+    ungroup() %&gt;% 
+    mutate(year = &quot;2009&quot;,
+           termination_flag = if_else(termination_flag == 1 &amp; year(desk_id_end_date) == 2009, &quot;Terminated&quot;, &quot;DidNotTerminate&quot;)) %&gt;% 
+    count(year, job_name, termination_flag) %&gt;% 
+    spread(termination_flag, n, fill = 0) %&gt;% 
+    mutate(Headcount =  Terminated + DidNotTerminate,
+           TerminationRate = percent(Terminated / Headcount)) %&gt;% 
+    arrange(desc(Terminated / Headcount))</code></pre>
+<p>Similarly, we have a single modification for the disclaimer, where we add org_name do clarify who the data is rolling up to.</p>
+<pre class="r"><code>  disclaimer_info &lt;-   data.frame(Information = 
+    c(&quot;Source: hrsample database&quot;,
+      paste(&quot;Data as of&quot;, as_of_date, &quot;.&quot;),
+      paste(&quot;Data includes all employees in&quot;, org_name ,&quot;who were active at any point from Jan 1, 2009 through December 31, 2009.&quot;), # Added for this example
+      &quot;If the employee had multiple jobs during 2009, only the most recent job is counted.&quot;,
+      &quot;Data is confidential and should be shared on a need to know basis only.&quot;,
+      &quot;Do not distribute externally.&quot;))</code></pre>
+<p>Finally, we close out the loop by creating an Excel workbook for each LOB. Again, the only change is the addition of <code>org_name</code> in the output filename. Also, we’ll export to a folder called “output”, so be sure to create that folder prior to running this script.</p>
+<pre class="r"><code>wb &lt;- createWorkbook()
+  addWorksheet(wb, report_name)
+  addWorksheet(wb, &quot;Data Disclaimer&quot;)
+  writeDataTable(wb, 1, hcto_summary)
+  writeDataTable(wb, 2, disclaimer_info)
+  addStyle(wb, 2, style = createStyle(wrapText = TRUE), rows = 1:7, cols = 1)
+  setColWidths(wb, 2, 1, widths = 50)
+  saveWorkbook(wb, paste0(&quot;output/&quot;, report_name, &quot; - &quot;, org_name, &quot; - &quot;, as_of_date, &quot;.xlsx&quot;), TRUE) # New
+}</code></pre>
+<p>So there it is. I use this type of automation often to meet client needs. It can save a ton of time! Thanks for reading - I would appreciate any feedback. <a href="https://github.com/harryahlas/sample-hr-database/blob/master/analysis/automated_report_generation.R">Here</a> is a link to the code.</p>
+</div>
+
+    </section>
+</article>
+
+<footer id="post-meta" class="clearfix">
+    <a href="https://twitter.com/harry_ahlas">
+    <img class="avatar" src="/images/avatar.png">
+    <div>
+        <span class="dark">Harry Ahlas</span>
+        <span>People Analytics Manager</span>
+    </div>
+    </a>
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=%2fpost%2fautomated-excel-report-generation-with-r%2f - Automated%20Excel%20Report%20Generation%20with%20R by @harry_ahlas"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+    </section>
+</footer>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "spf13" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+<ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/post/efficient-filesearching-with-r/">Efficient Filesearching with R<aside class="dates">Nov 24 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/basic-etl-with-r-and-sql/">Basic ETL with R and SQL<aside class="dates">Aug 11 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/upload-an-entire-directory-through-sftp-with-r/">Upload an Entire Directory through SFTP with R<aside class="dates">Jul 28 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/multi-condition-data-retrieval/">Multi-Condition Data Retrieval<aside class="dates">Jul 21 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/">Use R to add a Data Disclaimer to an Excel Report<aside class="dates">Apr 7 2019</aside></a>
+        </li>
+    
+</ul>
+
+
+
+        <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    
+    <a class="symbol" href="https://www.github.com/harryahlas">
+        circlegithub
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/harry_ahlas">
+        circletwitterbird
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+        © Copyright 2020 Harry Ahlas
+    
+    </p>
+</footer>
+
+    </section>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+
+</body>
+</html>

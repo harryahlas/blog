@@ -1,0 +1,188 @@
+---
+title: Automated Excel Report Generation with R
+author: Harry Ahlas
+date: '2019-04-28'
+slug: automated-excel-report-generation-with-r
+categories: []
+tags: []
+---
+
+This post is a follow-up to my earlier post, [Use R to add a Data Disclaimer to an Excel Report](http://harry.ahlas.com/2019/04/07/information-security-tab/index.html) **NEEDS EDIT-------------**. In that post, we created a single enterprise-wide human resources report along with a data disclaimer.
+
+Here we will automate that same report and generate 1 report for each of the 9 lines of business that report to the CEO of the same fictitious company. So one report for each leader who reports directly to the CEO.
+
+We will reuse much of the same code as before. It would be a good idea to read through the exercise in the link above if you have not yet already.
+
+First, let's load our libraries, update our variables, and import our data.
+
+```{r eval=FALSE}
+#devtools::install_github("harryahlas/hrsample")
+library(hrsample)
+library(tidyverse)
+library(scales)
+library(lubridate)
+library(openxlsx)
+
+# Tracking information
+as_of_date <- Sys.Date()
+report_name <- "PA73405 - Attrition by Job 2009"
+```
+
+In the previous exercise, we simply aggregated across the company. However, this task is a little more complex. We want to break this data out by line of business (LOB), so we need to add hierarchy information that will tell us which employees rollup to each department leader. To do this, we will import a new view called `rollup_view`.
+
+```{r eval=FALSE}
+glimpse(rollup_view, width = 70)
+	
+Observations: 1,233
+Variables: 11
+$ lvl00_desk_id  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1...
+$ lvl00_org      "CEO", "CEO", "CEO", "CEO", "CEO", "CEO", "...
+$ lvl01_desk_id  1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 2, 4, 6, 7, ...
+$ lvl01_org      "CEO", "Human Resources", "Sales", "Marketi...
+$ lvl02_desk_id  1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 14, 26, 30, ...
+$ lvl02_org      "CEO", "Human Resources", "Sales", "Marketi...
+$ lvl03_desk_id  1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 14, 26, 30, ...
+$ lvl03_org      "CEO", "Human Resources", "Sales", "Marketi...
+$ lvl04_desk_id  1, 3, 4, 5, 6, 7, 8, 9, 2, 10, 14, 26, 30, ...
+$ lvl04_org      "CEO", "Human Resources", "Sales", "Marketi...
+$ depth          0.000000e+00, 4.940656e-324, 4.940656e-324,...
+```
+
+As mentioned earlier, the original report we created was for the CEO (`lvl00_org`). Here, we want to break out multiple reports for each department (`lvl01_org`). Here are the names of these departments, along with a count of employee `desk_id`s:
+
+```{r eval=FALSE}
+rollup_view %>% count(lvl01_org) %>% arrange(desc(n))
+	
+	# A tibble: 7 x 2
+  lvl01_org           n
+  <chr>           <int>
+ 1 Sales             488
+ 2 Technology        158
+ 3 Human Resources   119
+ 4 Compliance         89
+ 5 Operations         85
+ 6 Legal              83
+ 7 Finance            73
+ 8 Strategy           70
+ 9 Marketing          67
+10 CEO                 1
+```
+
+You can see Sales has the highest number of employees, followed by Technology.
+
+### Join data to hierarchy
+
+Next, we'll join our raw data, `deskhistory_table`, to `rollup_view.` `deskhistory_table` captures the start and end dates for each employee's job. It also captures whether the job resulted in a termination. Each employee (`employee_num`) sits at a unique `desk_id`, which rolls up to one of the 7 lines of business.
+
+```{r eval=FALSE}
+deskhistory_table_hierarchy <- deskhistory_table %>% 
+  left_join(rollup_view %>% select(lvl01_desk_id,
+                                            lvl01_org,
+                                            lvl04_desk_id) %>% distinct(), 
+            by = c("desk_id" = "lvl04_desk_id"))
+
+glimpse(deskhistory_table_hierarchy[sample(1:nrow(deskhistory_table_hierarchy)),], width = 70)
+
+Observations: 4,724
+Variables: 8
+$ employee_num        2712, 7430, 8024, 4110, 40481, 34383, ...
+$ desk_id             1116, 615, 188, 439, 676, 650, 370, 83...
+$ desk_id_start_date  2018-12-26, 1999-01-01, 2011-07-21, 2...
+$ desk_id_end_date    2999-01-01, 2003-03-21, 2018-07-16, 2...
+$ termination_flag    0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 1, 1,...
+$ promotion_flag      0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0,...
+$ lvl01_desk_id       9, 4, 9, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,...
+$ lvl01_org           "Operations", "Sales", "Operations", "...
+```
+
+Our new table, `deskhistory_table_hierarchy`, includes all the desk history information along with the LOB name, `lvl01_org.`
+
+### Use a loop
+
+We'll use a loop to create one report for each LOB. So one report for each `lvl01_org` value.
+
+To start, let's create a data frame called `LOB_list` that has each of the 7 LOBs as well as the desk id for each LOB leader: `lvl01_desk_id.` The plan is to loop through each row/LOB in this data frame and create a new report during each loop.
+
+```{r eval=FALSE}
+LOB_list <- rollup_view %>% 
+  select(lvl01_org, lvl01_desk_id) %>% 
+  distinct() %>% 
+  filter(lvl01_org != "CEO")
+
+LOB_list
+
+# A tibble: 7 x 2
+  lvl01_org       lvl01_desk_id
+  <chr>                   <int>
+1 Human Resources             3
+2           Sales             4
+3       Marketing             5
+4           Legal             6
+5      Technology             7
+6        Strategy             8
+7      Operations             9
+8         Finance             2
+9      Compliance            10
+```
+
+Now that we have something to loop through, we can start on the loop.
+
+```{r eval=FALSE}
+for (i in (1:length(LOB_list$lvl01_org))) {
+```
+
+Note the variable `i` will start at 1 and increase each time we run through the loop until it reaches the last row (row 9 for Compliance) in `LOB_list.`
+
+```{r eval=FALSE}
+org_name <- LOB_list$lvl01_org[i]
+```
+
+The code we are going to cycle through in each loop is nearly identical to our previous entry's enterprise-wide report. The first addition is `filter(lvl01_org == LOB_list$lvl01_org[i]) %>%`. In the code below, you can see this line filters the report for rows that roll up to the LOB that the loop is currently running through. Again, refer to the previous exercise for more detail about the code below.
+
+```{r eval=FALSE}
+hcto_summary <- deskhistory_table_hierarchy %>% 
+        filter(lvl01_org == LOB_list$lvl01_org[i]) %>% 
+    left_join(deskjob_table) %>% 
+    filter(desk_id_start_date <= as.Date("2009-12-31"),
+           desk_id_end_date >= as.Date("2009-01-01")) %>% 
+    arrange(desc(desk_id_end_date)) %>% 
+    group_by(employee_num) %>% 
+    filter(row_number() == 1) %>% 
+    ungroup() %>% 
+    mutate(year = "2009",
+           termination_flag = if_else(termination_flag == 1 & year(desk_id_end_date) == 2009, "Terminated", "DidNotTerminate")) %>% 
+    count(year, job_name, termination_flag) %>% 
+    spread(termination_flag, n, fill = 0) %>% 
+    mutate(Headcount =  Terminated + DidNotTerminate,
+           TerminationRate = percent(Terminated / Headcount)) %>% 
+    arrange(desc(Terminated / Headcount))
+```
+
+Similarly, we have a single modification for the disclaimer, where we add org_name do clarify who the data is rolling up to.
+
+```{r eval=FALSE}
+  disclaimer_info <-   data.frame(Information = 
+    c("Source: hrsample database",
+      paste("Data as of", as_of_date, "."),
+      paste("Data includes all employees in", org_name ,"who were active at any point from Jan 1, 2009 through December 31, 2009."), # Added for this example
+      "If the employee had multiple jobs during 2009, only the most recent job is counted.",
+      "Data is confidential and should be shared on a need to know basis only.",
+      "Do not distribute externally."))
+```
+
+Finally, we close out the loop by creating an Excel workbook for each LOB. Again, the only change is the addition of `org_name` in the output filename. Also, we'll export to a folder called "output", so be sure to create that folder prior to running this script.
+
+```{r eval=FALSE}
+wb <- createWorkbook()
+  addWorksheet(wb, report_name)
+  addWorksheet(wb, "Data Disclaimer")
+  writeDataTable(wb, 1, hcto_summary)
+  writeDataTable(wb, 2, disclaimer_info)
+  addStyle(wb, 2, style = createStyle(wrapText = TRUE), rows = 1:7, cols = 1)
+  setColWidths(wb, 2, 1, widths = 50)
+  saveWorkbook(wb, paste0("output/", report_name, " - ", org_name, " - ", as_of_date, ".xlsx"), TRUE) # New
+}
+```
+
+So there it is. I use this type of automation often to meet client needs. It can save a ton of time! Thanks for reading - I would appreciate any feedback. [Here](https://github.com/harryahlas/sample-hr-database/blob/master/analysis/automated_report_generation.R) is a link to the code.
+
