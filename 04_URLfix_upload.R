@@ -1,4 +1,5 @@
 # urlfix and upload
+# Not neededas of 1/26/2020
 library(RCurl)
 setwd("C:\\Development\\github\\blogtest\\public\\")
 
