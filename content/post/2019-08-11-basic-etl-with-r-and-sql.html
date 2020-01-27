@@ -23,7 +23,7 @@ tags: []
 <pre class="r"><code>library(tidyverse)
 library(RSQLite)
 library(lubridate)</code></pre>
-<p>We will start by installing the ficticious <em>hrsample</em> HR database (<a href="http://harry.ahlas.com/2019/03/17/hrsample-database/index.html">hrsample blog NEEDS UPDATED LINK</a>). If you went through my earlier blog entry, <a href="http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/index.html">Multi-Condition Data Retrieval NEEDS UPDATED LINK</a>, you can continue to use that same database and skip this next step.</p>
+<p>We will start by installing the ficticious <em>hrsample</em> HR database (<a href="/post/the-hrsample-package-and-database/">hrsample blog</a>). If you went through my earlier blog entry, <a href="/post/multi-condition-data-retrieval/">Multi-Condition Data Retrieval</a>, you can continue to use that same database and skip this next step.</p>
 <pre class="r"><code>#devtools::install_github(&quot;harryahlas/hrsample&quot;)
 hrsample::hrsampleCreateSQLite(&quot;my_db.sqlite3&quot;)</code></pre>
 <div id="extract" class="section level3">
@@ -122,7 +122,7 @@ month_list[1:5]
 <div id="additional-transformation" class="section level3">
 <h3>Additional Transformation</h3>
 <p>Our new monthly calendar data produced by the for loop looks okay but we can enhance it. We can make it fit with the SQLite specs and make it more useful by adding additional fields.</p>
-<p>As mentioned earlier, SQLite does not support date formats. So we have to reformat the three date columns back to text.</p>
+<p>As mentioned earlier, SQLite does not have great support for date formats. So we have to reformat the three date columns back to text.</p>
 <pre class="r"><code>dh_trend$desk_id_start_date &lt;- format(dh_trend$desk_id_start_date, &quot;%Y-%m-%d&quot;)
 dh_trend$desk_id_end_date &lt;- format(dh_trend$desk_id_end_date, &quot;%Y-%m-%d&quot;)
 dh_trend$trend_month &lt;- format(dh_trend$trend_month, &quot;%Y-%m-%d&quot;)</code></pre>

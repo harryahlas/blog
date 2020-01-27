@@ -33,7 +33,7 @@ On occasion, seemingly simple business questions like this can be challenging if
 On occasion, seemingly simple business questions like this can be challenging if systems are built for single-condition queries.">
 <meta itemprop="datePublished" content="2019-07-21T00:00:00&#43;00:00" />
 <meta itemprop="dateModified" content="2019-07-21T00:00:00&#43;00:00" />
-<meta itemprop="wordCount" content="1833">
+<meta itemprop="wordCount" content="1832">
 
 
 
@@ -91,7 +91,7 @@ On occasion, seemingly simple business questions like this can be challenging if
 <p class="caption">More challenging retrieval</p>
 </div>
 <p>Now we have two conditions that can change. This second condition - multiple dates - adds a layer of complexity that some BI systems cannot handle. We are required to hand code each condition. Yuck! This limitation, as well as others, becomes glaring when clients ask for larger amounts of data, say 50,000 rows.</p>
-<p>I have more information about these BI tool limitations and why I have chosen this solution <a href="http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/multi-condition-data-retrieval-challenges.html">here</a>. <strong>—–NEEDS UPDATE—–</strong></p>
+<p>I have more information about these BI tool limitations and why I have chosen this solution <a href="/post/2020-01-24-multi-condition-data-retrieval_files/2019-07-21-multi-condition-data-retrieval-challenges.html">here</a>.</p>
 <p>In this post we will circumvent the limitations of our standard BI tools to make multi-condition data retrieval easier. We will:</p>
 <ul>
 <li>Import data</li>
@@ -211,7 +211,7 @@ df_one_row
 </div>
 <div id="ready-to-go---lets-iterate" class="section level3">
 <h3>Ready to Go - Let’s Iterate</h3>
-<p>We will use a for loop to retrieve the data. So one loop and retrieval for each row of client data. As I mention in <a href="http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/multi-condition-data-retrieval-challenges.html">my side post</a>, this is not the fastest way to pull data (and certainly not the only way) but it is a good hack to get around the system limitations that we can face.</p>
+<p>We will use a for loop to retrieve the data. So one loop and retrieval for each row of client data. As I mentioned earlier in <a href="/post/2020-01-24-multi-condition-data-retrieval_files/2019-07-21-multi-condition-data-retrieval-challenges.html">my side post</a>, this is not the fastest way to pull data (and certainly not the only way) but it is a good hack to get around the system limitations that we can face.</p>
 <p>To start, we will create an empty data frame called <code>df.</code> As we cycle through the client data, we’ll append our results to <code>df</code>.</p>
 <pre class="r"><code>df &lt;- tibble()</code></pre>
 <p>Next, we’ll start our for loop. Again, this will be one iteration per row. So i will be the same as the row number of the input data.</p>
@@ -251,7 +251,7 @@ df_one_row
                    &quot;Employee Number&quot; = &quot;employee_num&quot;)) %&gt;% 
   replace_na(list(job_name = &quot;not with company at this time&quot;)) %&gt;% 
   rename(`Job Name` = job_name)</code></pre>
-<p>Last, we’ll use <em>openxlsx</em> to export to Excel. For this example we will export a single tab. Normally, I would include a second disclaimer tab, which I strongly recommend and discuss in another blog post called <a href="http://harry.ahlas.com/2019/04/07/information-security-tab/index.html">Use R to add a Data Disclaimer to an Excel Report</a>.</p>
+<p>Last, we’ll use <em>openxlsx</em> to export to Excel. For this example we will export a single tab. Normally, I would include a second disclaimer tab, which I strongly recommend and discuss in another blog post called <a href="/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/">Use R to add a Data Disclaimer to an Excel Report</a>.</p>
 <pre class="r"><code>wb &lt;- createWorkbook()
 addWorksheet(wb, &quot;HR data needed with output&quot;)
 writeDataTable(wb, 1, output)
@@ -339,6 +339,10 @@ saveWorkbook(wb, &quot;Johnson litigation research with job_name.xlsx&quot;, TRU
     
         <li>
             <a href="/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/">Use R to add a Data Disclaimer to an Excel Report<aside class="dates">Apr 7 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/the-hrsample-package-and-database/">The hrsample Package and Database<aside class="dates">Mar 17 2019</aside></a>
         </li>
     
 </ul>

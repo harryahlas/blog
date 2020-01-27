@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Harry Ahlas">
+<meta name="description" content="People analytics, music, and audio engineering. Views are my own.">
+<meta name="generator" content="Hugo 0.62.2" />
+<title>The hrsample Package and Database</title>
+<link rel="shortcut icon" href="/images/favicon2.ico">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+
+<link rel="stylesheet" href="/css/monosocialiconsfont.css">
+
+
+
+
+<meta property="og:title" content="The hrsample Package and Database" />
+<meta property="og:description" content="I am excited to announce the initial release of hrsample, a fictitious human resources database! Though still a work in progress, I am very proud to be able to share this evolving project with you.
+Why build an HR database? Several reasons. Primarily, I feel like the online sample HR databases I have seen tend to be clean and simple. If systems were designed perfectly and data was always clean, then all we would need is a single business intelligence tool for this work and I might be out of a job." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/the-hrsample-package-and-database/" />
+<meta property="article:published_time" content="2019-03-17T00:00:00+00:00" />
+<meta property="article:modified_time" content="2019-03-17T00:00:00+00:00" />
+
+
+<meta itemprop="name" content="The hrsample Package and Database">
+<meta itemprop="description" content="I am excited to announce the initial release of hrsample, a fictitious human resources database! Though still a work in progress, I am very proud to be able to share this evolving project with you.
+Why build an HR database? Several reasons. Primarily, I feel like the online sample HR databases I have seen tend to be clean and simple. If systems were designed perfectly and data was always clean, then all we would need is a single business intelligence tool for this work and I might be out of a job.">
+<meta itemprop="datePublished" content="2019-03-17T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2019-03-17T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="853">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="The hrsample Package and Database"/>
+<meta name="twitter:description" content="I am excited to announce the initial release of hrsample, a fictitious human resources database! Though still a work in progress, I am very proud to be able to share this evolving project with you.
+Why build an HR database? Several reasons. Primarily, I feel like the online sample HR databases I have seen tend to be clean and simple. If systems were designed perfectly and data was always clean, then all we would need is a single business intelligence tool for this work and I might be out of a job."/>
+<meta name="twitter:site" content="@https://www.twitter.com/harry_ahlas"/>
+
+
+    </head>
+<body>
+    <nav class="main-nav">
+	
+		<a href='/'> <span class="arrow">←</span>Home</a>
+	
+
+	
+ 		<a href='/about/'>About</a>
+  	
+
+	
+</nav>
+
+    <section id="wrapper">
+        
+        
+<article class="post">
+    <header>
+        <h1>The hrsample Package and Database</h1>
+        <h2 class="subtitle"></h2>
+        <h2 class="headline">
+        March 17, 2019
+        <br>
+        
+        </h2>
+    </header>
+    <section id="post-body">
+        
+
+
+<p>I am excited to announce the initial release of <em>hrsample</em>, a fictitious human resources database! Though still a work in progress, I am very proud to be able to share this evolving project with you.</p>
+<p>Why build an HR database? Several reasons. Primarily, I feel like the online sample HR databases I have seen tend to be clean and simple. If systems were designed perfectly and data was always clean, then all we would need is a single business intelligence tool for this work and I might be out of a job. Real world data is usually much more messy.</p>
+<p>With <em>hrsample</em> I wanted to create something more like the real world. Instead of a single spreadsheet with all the information you might need, I opted for multiple tables with missing/incomplete data.</p>
+<p>Also, I wanted my own database that I can use to help illustrate examples with both R and SQL in future blog posts. I figure using one central data source will bring some consistency to the exercises I present here. For this reason, <em>hrsample</em> comes in multiple formats: an R package and a MySQL database [edit: <em>hrsample</em> also now includes PostgreSQL, SQLite, and SQL Server databases].</p>
+<p>And of course I wanted something I could control. Say I want to do an analysis on some of the data, I have the ability to make changes to the database. For example, I can create teams with high turnover and poor performance to help with an analysis on good managers vs. bad managers. So expect that this database will evolve with time and the data will change.</p>
+<p>I want to emphasize that the data in <em>hrsample</em> will change with time. Right now it is built more for data wrangling than for analytics. With time I intend to add nuggets to the data that analytics can uncover.</p>
+<p>This database is fully reproducible. You can refer to the code on GitHub to see how I built it. <a href="https://github.com/harryahlas/sample-hr-database" class="uri">https://github.com/harryahlas/sample-hr-database</a></p>
+<p>Additionally, you can modify the parameters and input files to your taste and create your own HR database using this code!</p>
+<div id="how-to-install-the-hrsample-package-for-r" class="section level3">
+<h3>How to Install the hrsample Package for R</h3>
+<p>Use the code below to install hrsample from GitHub. The code below will install and load all the tables in the database. The devtools package is required.</p>
+<pre class="r"><code>devtools::install_github(&quot;harryahlas/hrsample&quot;)
+library(hrsample)</code></pre>
+<p>These are the tables currently available:</p>
+<ul>
+<li><code>employeeinfo_table</code> - a fictitious list of people that may or may not be employed at this company</li>
+<li><code>deskhistory_table</code> - a history of employee jobs</li>
+<li><code>deskjob_table</code> - a list of jobs for each position</li>
+<li><code>hierarchy_table</code> - a rollup that shows which position reports to which</li>
+<li><code>performancereview_table</code> - a history of employee performance review scores</li>
+<li><code>salaryhistory_table</code> - a history of employee salaries</li>
+<li><code>recruiting_table</code> - information about employee hiring</li>
+<li><code>rollup_view</code> - a view of the hierarchy structure</li>
+<li><code>contact_table</code> - employee contact information</li>
+<li><code>education_table</code> - information about employee education</li>
+<li><code>skills_table</code> - list of employee skillsets</li>
+</ul>
+</div>
+<div id="how-to-install-the-hrsample-mysql-database" class="section level3">
+<h3>How to Install the hrsample MySQL Database</h3>
+<p>Some of my examples in future posts will require you to access hrsample via a MySQL database.</p>
+<p><a href="https://twitter.com/jeffblackadar?lang=en">Jeff Blackadar</a> has an <a href="https://programminghistorian.org/en/lessons/getting-started-with-mysql-using-r#downloading-and-installing-mysql">excellent tutorial</a> on how to set up MySQL and MySQL Workbench on your machine and connect via R. It takes around an hour and it was a gamechanger for me. I can’t recommend this tutorial enough!</p>
+<p>Once you have MySQL Workbench set up locally, it is easy to import <em>hrsample</em> to your local machine.</p>
+<ol style="list-style-type: decimal">
+<li>First, copy the SQL files in this folder: <a href="https://github.com/harryahlas/sample-hr-database/tree/master/data/MySQLdump" class="uri">https://github.com/harryahlas/sample-hr-database/tree/master/data/MySQLdump</a>. (You may want to use GitZip for this. You can paste this URL into the GitZip textbox and click “Download”).</li>
+<li>Paste the files to a folder on your local machine.</li>
+<li>Open MySQL Workbench and, if necessary, create a new local connection.</li>
+<li>In the Navigator window, on the Administration tab, click Data Import/Restore.</li>
+<li>Follow the instructions to import the folder from your local machine.</li>
+</ol>
+<p><img src="/post/2019-03-17-the-hrsample-package-and-database_files/MySQL_import.png" /></p>
+<p>The tables in the <em>hrsample</em> MySQL database are virtually identical to the data frames in the <em>hrsample</em> R package. The only difference is the table names - the R data frames have a "_table" suffix. Please also note in these examples I have set the username and password as: user=‘newuser’, password=‘newuser’.</p>
+</div>
+<div id="the-build" class="section level3">
+<h3>The Build</h3>
+<p>If you are interested in seeing how I built this, or if you have suggestions how to improve, or if you want to build your own database like <em>hrsample</em>, please visit the hrsample development repository, <a href="https://github.com/harryahlas/sample-hr-database/" class="uri">https://github.com/harryahlas/sample-hr-database/</a>. There are customizable parameters that you can specify - names of lines of businesses, jobs, employee distributions, and the like.</p>
+</div>
+<div id="the-data" class="section level3">
+<h3>The Data</h3>
+<p>I am not going to go into too much depth about the data here as I will save a lot of it for the exercises. Here are a few graphics that show some of the data points available in the data set. I have also included an EER diagram that shows the fields and relationships.</p>
+<div class="figure">
+<img src="/post/2019-03-17-the-hrsample-package-and-database_files/HRSAMPLE_EER.png" alt="hrsample EER" />
+<p class="caption">hrsample EER</p>
+</div>
+<p><img src="/post/2019-03-17-the-hrsample-package-and-database_files/employee_distribution.png" /></p>
+<p><img src="/post/2019-03-17-the-hrsample-package-and-database_files/job_distribution.png" /></p>
+<p><img src="/post/2019-03-17-the-hrsample-package-and-database_files/merit_increases.png" /></p>
+<p><img src="/post/2019-03-17-the-hrsample-package-and-database_files/salary_distribution.png" /></p>
+</div>
+<div id="until-next-time" class="section level3">
+<h3>Until Next Time</h3>
+<p>Stay tuned for more on <em>hrsample.</em> I’ll have some reporting examples in coming weeks. I would love to hear your thoughts and questions on this work. Remember, it is a work in progress so your feedback is valuable and impactful. Please don’t hesitate to reach out via <a href="https://twitter.com/harry_ahlas">Twitter</a>!</p>
+</div>
+
+    </section>
+</article>
+
+<footer id="post-meta" class="clearfix">
+    <a href="https://twitter.com/harry_ahlas">
+    <img class="avatar" src="/images/avatar.png">
+    <div>
+        <span class="dark">Harry Ahlas</span>
+        <span>People Analytics Manager</span>
+    </div>
+    </a>
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=%2fpost%2fthe-hrsample-package-and-database%2f - The%20hrsample%20Package%20and%20Database by @harry_ahlas"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+    </section>
+</footer>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "spf13" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+<ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/post/efficient-filesearching-with-r/">Efficient Filesearching with R<aside class="dates">Nov 24 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/basic-etl-with-r-and-sql/">Basic ETL with R and SQL<aside class="dates">Aug 11 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/upload-an-entire-directory-through-sftp-with-r/">Upload an Entire Directory through SFTP with R<aside class="dates">Jul 28 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/multi-condition-data-retrieval/">Multi-Condition Data Retrieval<aside class="dates">Jul 21 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/automated-excel-report-generation-with-r/">Automated Excel Report Generation with R<aside class="dates">Apr 28 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/">Use R to add a Data Disclaimer to an Excel Report<aside class="dates">Apr 7 2019</aside></a>
+        </li>
+    
+</ul>
+
+
+
+        <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    
+    <a class="symbol" href="https://www.github.com/harryahlas">
+        circlegithub
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/harry_ahlas">
+        circletwitterbird
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+        © Copyright 2020 Harry Ahlas
+    
+    </p>
+</footer>
+
+    </section>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+
+</body>
+</html>

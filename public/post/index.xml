@@ -57,7 +57,7 @@ On occasion, seemingly simple business questions like this can be challenging if
       <pubDate>Sun, 28 Apr 2019 00:00:00 +0000</pubDate>
       
       <guid>/post/automated-excel-report-generation-with-r/</guid>
-      <description>This post is a follow-up to my earlier post, Use R to add a Data Disclaimer to an Excel Report NEEDS EDIT————-. In that post, we created a single enterprise-wide human resources report along with a data disclaimer.
+      <description>This post is a follow-up to my earlier post, Use R to add a Data Disclaimer to an Excel Report. In that post, we created a single enterprise-wide human resources report along with a data disclaimer.
 Here we will automate that same report and generate 1 report for each of the 9 lines of business that report to the CEO of the same fictitious company. So one report for each leader who reports directly to the CEO.</description>
     </item>
     
@@ -70,6 +70,16 @@ Here we will automate that same report and generate 1 report for each of the 9 l
       <description>I work with confidential and restricted data in a legal/regulatory environment. Data needs to be accurate and secure. A robust disclaimer can go a long way in helping meet those needs.
 In this post we will use R to:
 Wrangle data from the hrsample databaseCreate a basic human resources summary report in ExcelAdd a simple data disclaimer tab to our reportYou can find the R script here: https://github.</description>
+    </item>
+    
+    <item>
+      <title>The hrsample Package and Database</title>
+      <link>/post/the-hrsample-package-and-database/</link>
+      <pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>/post/the-hrsample-package-and-database/</guid>
+      <description>I am excited to announce the initial release of hrsample, a fictitious human resources database! Though still a work in progress, I am very proud to be able to share this evolving project with you.
+Why build an HR database? Several reasons. Primarily, I feel like the online sample HR databases I have seen tend to be clean and simple. If systems were designed perfectly and data was always clean, then all we would need is a single business intelligence tool for this work and I might be out of a job.</description>
     </item>
     
   </channel>

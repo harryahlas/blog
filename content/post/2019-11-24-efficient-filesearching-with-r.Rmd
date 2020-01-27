@@ -101,8 +101,11 @@ files_identified <- files_to_search %>%
   mutate(file_text = map(filenames, read_file_try)) %>% 
   filter(grepl(search_terms_re, file_text, ignore.case = TRUE)) %>% 
   unnest(file_text)
+ ```
+ 
 And here is our output:
 
+```{r eval = FALSE}
 files_identified$filenames %>% head()
 [1] "sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDw/readme.md"       
 [2] "sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDwByTimer/readme.md"

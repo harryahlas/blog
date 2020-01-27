@@ -25,7 +25,7 @@ library(tidyverse)
 library(RSQLite)
 library(lubridate)
 ```
-We will start by installing the ficticious *hrsample* HR database ([hrsample blog NEEDS UPDATED LINK](http://harry.ahlas.com/2019/03/17/hrsample-database/index.html)). If you went through my earlier blog entry, [Multi-Condition Data Retrieval NEEDS UPDATED LINK](http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/index.html), you can continue to use that same database and skip this next step.
+We will start by installing the ficticious *hrsample* HR database ([hrsample blog](/post/the-hrsample-package-and-database/)). If you went through my earlier blog entry, [Multi-Condition Data Retrieval](/post/multi-condition-data-retrieval/), you can continue to use that same database and skip this next step.
 
 ```{r eval=FALSE}
 #devtools::install_github("harryahlas/hrsample")
@@ -161,7 +161,7 @@ dh_trend <- bind_rows(dh_trend, dh_trend_active, dh_trend_term)
 ### Additional Transformation
 Our new monthly calendar data produced by the for loop looks okay but we can enhance it. We can make it fit with the SQLite specs and make it more useful by adding additional fields.
 
-As mentioned earlier, SQLite does not support date formats. So we have to reformat the three date columns back to text.
+As mentioned earlier, SQLite does not have great support for date formats. So we have to reformat the three date columns back to text.
 ```{r eval=FALSE}
 dh_trend$desk_id_start_date <- format(dh_trend$desk_id_start_date, "%Y-%m-%d")
 dh_trend$desk_id_end_date <- format(dh_trend$desk_id_end_date, "%Y-%m-%d")

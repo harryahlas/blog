@@ -29,7 +29,7 @@ tags: []
 </div>
 <div id="the-data" class="section level3">
 <h3>The Data</h3>
-<p>For this report, we will use the <em>hrsample</em> database (more info <a href="http://harry.ahlas.com/2019/03/17/hrsample-database/index.html">here</a>), which can be installed with <code>devtools::install_github("harryahlas/hrsample")</code>. Let’s say a legal team at this imaginary company wants to know what the company’s job headcount and turnover looked like in 2009.</p>
+<p>For this report, we will use the <em>hrsample</em> database (more info <a href="/post/the-hrsample-package-and-database/">here</a>), which can be installed with <code>devtools::install_github("harryahlas/hrsample")</code>. Let’s say a legal team at this imaginary company wants to know what the company’s job headcount and turnover looked like in 2009.</p>
 <p>Let’s begin with the R script. First things first, let’s load packages, create a report name/number for tracking as well as an as of date:</p>
 <pre class="r"><code>library(hrsample)
 library(tidyverse)
@@ -154,6 +154,6 @@ setColWidths(wb, 2, 1, widths = 50)</code></pre>
 <p>For a one time report this may seem like a lot of work to add one tab with only 7 rows of text. Why not just input the text directly into Excel?</p>
 <p>I would agree this is overkill for one report. However, there is a good chance that this code can be reused later. It could be packaged into a function as well, depending on your need.</p>
 <p>The value really rears its head when you start producing multiple reports - super handy! That is something I will be tackling on a future post and look forward to sharing with you.</p>
-<p>Thanks for reading - I would appreciate any feedback. <a href="https://github.com/harryahlas/sample-hr-database/blob/master/analysis/data_disclaimer_tab.R">Here</a> is a link to the code.</p>
+<p>Thanks for reading - I would appreciate any feedback.</p>
 </div>
 </div>

@@ -21,8 +21,8 @@ However, on occasion clients ask for information about different employees on di
 ![More challenging retrieval](/post/2020-01-24-multi-condition-data-retrieval_files/difficult_retrieval.gif)
 
 Now we have two conditions that can change. This second condition - multiple dates - adds a layer of complexity that some BI systems cannot handle. We are required to hand code each condition. Yuck! This limitation, as well as others, becomes glaring when clients ask for larger amounts of data, say 50,000 rows.
-
-I have more information about these BI tool limitations and why I have chosen this solution [here](http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/multi-condition-data-retrieval-challenges.html). **-----NEEDS UPDATE-----**
+ 
+I have more information about these BI tool limitations and why I have chosen this solution [here](/post/2020-01-24-multi-condition-data-retrieval_files/2019-07-21-multi-condition-data-retrieval-challenges.html). 
 
 In this post we will circumvent the limitations of our standard BI tools to make multi-condition data retrieval easier. We will:
 
@@ -184,7 +184,7 @@ Great! The code is working and we are ready run through all the client data.
 
 ### Ready to Go - Let's Iterate
 
-We will use a for loop to retrieve the data. So one loop and retrieval for each row of client data. As I mention in [my side post](http://harry.ahlas.com/2019/07/21/multi-condition-data-retrieval/multi-condition-data-retrieval-challenges.html), this is not the fastest way to pull data (and certainly not the only way) but it is a good hack to get around the system limitations that we can face.
+We will use a for loop to retrieve the data. So one loop and retrieval for each row of client data. As I mentioned earlier in [my side post](/post/2020-01-24-multi-condition-data-retrieval_files/2019-07-21-multi-condition-data-retrieval-challenges.html), this is not the fastest way to pull data (and certainly not the only way) but it is a good hack to get around the system limitations that we can face.
 
 To start, we will create an empty data frame called `df.` As we cycle through the client data, we'll append our results to `df`.
 
@@ -244,7 +244,7 @@ output <- input_data %>%
   rename(`Job Name` = job_name)
 ```
 
-Last, we'll use *openxlsx* to export to Excel. For this example we will export a single tab. Normally, I would include a second disclaimer tab, which I strongly recommend and discuss in another blog post called [Use R to add a Data Disclaimer to an Excel Report](http://harry.ahlas.com/2019/04/07/information-security-tab/index.html).
+Last, we'll use *openxlsx* to export to Excel. For this example we will export a single tab. Normally, I would include a second disclaimer tab, which I strongly recommend and discuss in another blog post called [Use R to add a Data Disclaimer to an Excel Report](/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/).
 
 ```{r eval=FALSE}
 wb <- createWorkbook()

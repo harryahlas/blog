@@ -76,10 +76,9 @@ files_identified &lt;- files_to_search %&gt;%
   add_row(filenames = &quot;x&quot;) %&gt;% 
   mutate(file_text = map(filenames, read_file_try)) %&gt;% 
   filter(grepl(search_terms_re, file_text, ignore.case = TRUE)) %&gt;% 
-  unnest(file_text)
-And here is our output:
-
-files_identified$filenames %&gt;% head()
+  unnest(file_text)</code></pre>
+<p>And here is our output:</p>
+<pre class="r"><code>files_identified$filenames %&gt;% head()
 [1] &quot;sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDw/readme.md&quot;       
 [2] &quot;sql-data-warehouse-samples-master/arm-templates/sqlDwAutoScaler/SqlDwAutoScaler/ScaleSqlDwByTimer/readme.md&quot;
 [3] &quot;sql-data-warehouse-samples-master/samples/adf/management-operations/Readme.md&quot;                              

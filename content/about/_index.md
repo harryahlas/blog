@@ -9,4 +9,4 @@ Welcome! I am a People Analytics Manager in the financial industry. Here I will 
 
 ***
 
-LinkedIn
+[My LinkedIn page](https://www.linkedin.com/in/harry-ahlas-b471b7137)

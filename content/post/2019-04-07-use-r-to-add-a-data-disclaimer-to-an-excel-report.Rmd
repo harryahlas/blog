@@ -30,7 +30,7 @@ I can't emphasize enough how critical it is to proactively clarify anything that
 
 ### The Data
 
-For this report, we will use the *hrsample* database (more info [here](http://harry.ahlas.com/2019/03/17/hrsample-database/index.html)), which can be installed with `devtools::install_github("harryahlas/hrsample")`. Let's say a legal team at this imaginary company wants to know what the company's job headcount and turnover looked like in 2009.
+For this report, we will use the *hrsample* database (more info [here](/post/the-hrsample-package-and-database/)), which can be installed with `devtools::install_github("harryahlas/hrsample")`. Let's say a legal team at this imaginary company wants to know what the company's job headcount and turnover looked like in 2009.
 
 Let's begin with the R script. First things first, let's load packages, create a report name/number for tracking as well as an as of date:
 
@@ -225,5 +225,5 @@ I would agree this is overkill for one report. However, there is a good chance t
 
 The value really rears its head when you start producing multiple reports - super handy! That is something I will be tackling on a future post and look forward to sharing with you.
 
-Thanks for reading - I would appreciate any feedback. [Here](https://github.com/harryahlas/sample-hr-database/blob/master/analysis/data_disclaimer_tab.R) is a link to the code.
+Thanks for reading - I would appreciate any feedback. 
 
