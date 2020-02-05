@@ -6,10 +6,21 @@
     <description>Recent content on Harry Ahlas</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 24 Nov 2019 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 09 Feb 2020 00:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Tabular Reporting with R Markdown</title>
+      <link>/post/tabular-reporting-with-rmarkdown/</link>
+      <pubDate>Sun, 09 Feb 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/tabular-reporting-with-rmarkdown/</guid>
+      <description>R Markdown is a powerful data communication tool that continues to grow in popularity. Here, we will use R Markdown to build a simple report featuring two tabs that the user can toggle to better understand the data.
+The full code is available on GitHub.
+Below is an image of the report we will be building. Note the Headcount tab is currently in focus, showcasing a graph of company headcount.</description>
+    </item>
     
     <item>
       <title>Efficient Filesearching with R</title>

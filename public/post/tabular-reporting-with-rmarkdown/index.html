@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Harry Ahlas">
+<meta name="description" content="People analytics, music, and audio engineering. Views are my own.">
+<meta name="generator" content="Hugo 0.62.2" />
+<title>Tabular Reporting with R Markdown</title>
+<link rel="shortcut icon" href="/images/favicon2.ico">
+<link rel="stylesheet" href="/css/style.css">
+<link rel="stylesheet" href="/css/highlight.css">
+
+
+
+<link rel="stylesheet" href="/css/monosocialiconsfont.css">
+
+
+
+
+<meta property="og:title" content="Tabular Reporting with R Markdown" />
+<meta property="og:description" content="R Markdown is a powerful data communication tool that continues to grow in popularity. Here, we will use R Markdown to build a simple report featuring two tabs that the user can toggle to better understand the data.
+The full code is available on GitHub.
+Below is an image of the report we will be building. Note the Headcount tab is currently in focus, showcasing a graph of company headcount." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/tabular-reporting-with-rmarkdown/" />
+<meta property="article:published_time" content="2020-02-09T00:00:00+00:00" />
+<meta property="article:modified_time" content="2020-02-09T00:00:00+00:00" />
+
+
+<meta itemprop="name" content="Tabular Reporting with R Markdown">
+<meta itemprop="description" content="R Markdown is a powerful data communication tool that continues to grow in popularity. Here, we will use R Markdown to build a simple report featuring two tabs that the user can toggle to better understand the data.
+The full code is available on GitHub.
+Below is an image of the report we will be building. Note the Headcount tab is currently in focus, showcasing a graph of company headcount.">
+<meta itemprop="datePublished" content="2020-02-09T00:00:00&#43;00:00" />
+<meta itemprop="dateModified" content="2020-02-09T00:00:00&#43;00:00" />
+<meta itemprop="wordCount" content="492">
+
+
+
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Tabular Reporting with R Markdown"/>
+<meta name="twitter:description" content="R Markdown is a powerful data communication tool that continues to grow in popularity. Here, we will use R Markdown to build a simple report featuring two tabs that the user can toggle to better understand the data.
+The full code is available on GitHub.
+Below is an image of the report we will be building. Note the Headcount tab is currently in focus, showcasing a graph of company headcount."/>
+<meta name="twitter:site" content="@https://www.twitter.com/harry_ahlas"/>
+
+
+    </head>
+<body>
+    <nav class="main-nav">
+	
+		<a href='/'> <span class="arrow">←</span>Home</a>
+	
+
+	
+ 		<a href='/about/'>About</a>
+  	
+
+	
+</nav>
+
+    <section id="wrapper">
+        
+        
+<article class="post">
+    <header>
+        <h1>Tabular Reporting with R Markdown</h1>
+        <h2 class="subtitle"></h2>
+        <h2 class="headline">
+        February 9, 2020
+        <br>
+        
+        </h2>
+    </header>
+    <section id="post-body">
+        
+
+
+<p><em>R Markdown</em> is a powerful data communication tool that continues to grow in popularity. Here, we will use <em>R Markdown</em> to build a simple report featuring two tabs that the user can toggle to better understand the data.</p>
+<p>The full code is available <a href="https://github.com/harryahlas/sample-hr-database/blob/master/analysis/tabular_data_example.Rmd">on GitHub</a>.</p>
+<p>Below is an image of the report we will be building. Note the <em>Headcount</em> tab is currently in focus, showcasing a graph of company headcount. The <em>Breakout</em> tab, marked in red, is hidden.</p>
+<p><img src="/post/2020-02-09-tabular-reporting-with-rmarkdown_files/tabular_report.png" /></p>
+<p>Clicking on the <em>Breakout</em> link takes the user to a second tab containing more detailed headcount data that can be easily searched and filtered:</p>
+<p><img src="/post/2020-02-09-tabular-reporting-with-rmarkdown_files/tabular_report_breakout.png" /></p>
+<div id="r-markdown" class="section level3">
+<h3>R Markdown</h3>
+<p>To create this report, let’s start by opening a new R Markdown document. In RStudio, click <code>File &gt; New File &gt; R Markdown...</code> and click <em>OK</em>. Remove any code on the document and place the setup code below at the top. We’ll use the <em>tidyverse</em>, <em>hrsample</em>, and <em>DT</em> packages.</p>
+<pre><code>---
+title: &quot;Company HC Analytics&quot;
+author: &quot;People Analytics Team&quot;
+date: &quot;2/9/2020&quot;
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(hrsample) #devtools::install_github(&quot;harryahlas/hrsample&quot;)
+library(DT)
+default_color &lt;- rgb(155/255, 186/255, 204/255)
+```</code></pre>
+<p>Next, let’s add the main header. We’ll also add <code>{.tabset}</code> after the header to designate that the document will have multiple tabs. R will see the <code>###</code> in front of <code>Headcount</code> and know to make the first tab there.</p>
+<pre><code>## Headcount Summary {.tabset}
+
+### Headcount</code></pre>
+<p>Now that the first tab is ready to be populated, we can create the data for our graph as well as the graph itself there. Feel free to explore the code that generates the data below. However, for our purposes here you need only copy and paste it to your R Markdown document.</p>
+<pre><code>```{r echo=FALSE}
+active_roster &lt;- deskhistory_table %&gt;% 
+  filter(desk_id_end_date == &quot;2999-01-01&quot;) %&gt;% 
+  left_join(rollup_view, by = c(&quot;desk_id&quot; = &quot;lvl04_desk_id&quot;)) %&gt;% 
+  left_join(hierarchy_table, by =c(&quot;lvl01_desk_id&quot; = &quot;desk_id&quot;))
+
+active_roster %&gt;% 
+  count(lvl01_org) %&gt;% 
+  filter(lvl01_org != &quot;CEO&quot;) %&gt;% 
+  ggplot(aes(x = fct_reorder(lvl01_org, -n), y = n)) +
+  geom_col(fill = default_color, width = .6) +
+  labs(title = &quot;Current Headcount by Line of Business&quot;) +
+  theme_minimal() +
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(),
+        axis.title.y=element_blank(),
+        axis.title.x=element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)
+  ) +
+  geom_text(aes(label = n), size = 3.5)
+```</code></pre>
+<p>Now that we have populated the <em>Headcount</em> tab, we can move on to the <em>Breakout</em> tab. I am amazed at how easy <em>R Markdown</em> makes it to create a new tab.</p>
+<p>After we signify the new <em>Breakout</em> tab using <code>###</code>, we will use the <code>DT</code> package’s <code>datatable</code> function to create a clean table that includes filters and a general text search. The code below generates the table based on data we pulled earlier.</p>
+<pre><code>### Breakout
+```{r echo=FALSE}
+active_roster %&gt;% 
+  filter(lvl01_org != &quot;CEO&quot;) %&gt;% 
+  count(lvl01_org, lvl02_org) %&gt;% 
+  datatable(filter = &quot;top&quot;, options = list(pageLength = 5))
+```</code></pre>
+<p>And there you go, the report is ready to knit to HTML. I usually use RStudio’s <em>Knit</em> button but you can do it from the command line as well: <code>knitr::knit("your_filename.Rmd", "your_filename.html")</code></p>
+<p>Hope you enjoyed this!</p>
+</div>
+
+    </section>
+</article>
+
+<footer id="post-meta" class="clearfix">
+    <a href="https://twitter.com/harry_ahlas">
+    <img class="avatar" src="/images/avatar.png">
+    <div>
+        <span class="dark">Harry Ahlas</span>
+        <span>People Analytics Manager</span>
+    </div>
+    </a>
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=%2fpost%2ftabular-reporting-with-rmarkdown%2f - Tabular%20Reporting%20with%20R%20Markdown by @harry_ahlas"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+    </section>
+</footer>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "spf13" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+<ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="/post/efficient-filesearching-with-r/">Efficient Filesearching with R<aside class="dates">Nov 24 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/basic-etl-with-r-and-sql/">Basic ETL with R and SQL<aside class="dates">Aug 11 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/upload-an-entire-directory-through-sftp-with-r/">Upload an Entire Directory through SFTP with R<aside class="dates">Jul 28 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/multi-condition-data-retrieval/">Multi-Condition Data Retrieval<aside class="dates">Jul 21 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/automated-excel-report-generation-with-r/">Automated Excel Report Generation with R<aside class="dates">Apr 28 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/">Use R to add a Data Disclaimer to an Excel Report<aside class="dates">Apr 7 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="/post/the-hrsample-package-and-database/">The hrsample Package and Database<aside class="dates">Mar 17 2019</aside></a>
+        </li>
+    
+</ul>
+
+
+
+        <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    
+    <a class="symbol" href="https://www.github.com/harryahlas">
+        circlegithub
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/harry_ahlas">
+        circletwitterbird
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+        © Copyright 2020 Harry Ahlas
+    
+    </p>
+</footer>
+
+    </section>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="/js/main.js"></script>
+<script src="/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+
+</body>
+</html>

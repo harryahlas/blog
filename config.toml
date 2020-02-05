@@ -1,5 +1,5 @@
 # Site settings
-baseurl = "http://harry.ahlas.com" #"http://harry.ahlas.com"  "/" "http://www.earlydemise.com/blogtest/"
+baseurl = "http://harry.ahlas.com"   #"http://harry.ahlas.com"  "/" "http://www.earlydemise.com/blogtest/"
 #baseurl = "/" 
 languageCode = "en-us"
 title = "Harry Ahlas"
