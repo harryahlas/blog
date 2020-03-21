@@ -67,6 +67,6 @@ active_roster %&gt;%
   count(lvl01_org, lvl02_org) %&gt;% 
   datatable(filter = &quot;top&quot;, options = list(pageLength = 5))
 ```</code></pre>
-<p>And there you go, the report is ready to knit to HTML. I usually use RStudio’s <em>Knit</em> button but you can do it from the command line as well: <code>knitr::knit("your_filename.Rmd", "your_filename.html")</code></p>
+<p>And there you go, the report is ready to knit to HTML. I usually use RStudio’s <em>Knit</em> button but you can do it from the command line as well: <code>rmarkdown::render("your_filename.Rmd", "html_document")</code></p>
 <p>Hope you enjoyed this!</p>
 </div>

@@ -93,6 +93,6 @@ cat(c(
   sep = "\n")
 ```
 
-And there you go, the report is ready to knit to HTML.  I usually use RStudio's *Knit* button but you can do it from the command line as well: `knitr::knit("your_filename.Rmd", "your_filename.html")`  
+And there you go, the report is ready to knit to HTML.  I usually use RStudio's *Knit* button but you can do it from the command line as well: `rmarkdown::render("your_filename.Rmd", "html_document")`  
 
 Hope you enjoyed this!
