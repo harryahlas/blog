@@ -24,5 +24,17 @@ besceaApp(data = sneapsters,
           text_field = "post_text",  
           unique_id = "textid")     
 ```
+ 
+![bescea search example](search2.png)
 
-![buscea search example](search2.png)
+
+## Requirements
+
+Requires RStudio (*reticulate* and *tidyverse* packages) and Python (*pandas*, *re*, *spacy*, *rank_bm25*, *tqdm*, *pickle*, *numpy*, *gensim*, and *nmslib* modules). 
+
+## Acknowledgements
+
+This work is based **heavily** on foundational code provided by Josh Taylor (https://twitter.com/josh_taylor_01). 
+
+- https://towardsdatascience.com/how-to-build-a-search-engine-9f8ffa405eac
+- https://towardsdatascience.com/how-to-build-a-smart-search-engine-a86fca0d0795

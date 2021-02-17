@@ -6,7 +6,18 @@
     <description>Recent content on Harry Ahlas</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 09 Feb 2020 00:00:00 +0000</lastBuildDate><atom:link href="http://harry.ahlas.com/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 16 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="http://harry.ahlas.com/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Introducing Bescea</title>
+      <link>http://harry.ahlas.com/post/introducing-bescea/</link>
+      <pubDate>Tue, 16 Feb 2021 00:00:00 +0000</pubDate>
+      
+      <guid>http://harry.ahlas.com/post/introducing-bescea/</guid>
+      <description>I want to share Bescea, an instant search engine for text. This is perhaps most useful if you want to search through a data frame to find documents about a particular topic.
+Installationdevtools::install_github(&amp;quot;harryahlas/bescea&amp;quot;)Run Bescealibrary(bescea)besceaApp(data = sneapsters, text_field = &amp;quot;post_text&amp;quot;, unique_id = &amp;quot;textid&amp;quot;) bescea search example
+RequirementsRequires RStudio (reticulate and tidyverse packages) and Python (pandas, re, spacy, rank_bm25, tqdm, pickle, numpy, gensim, and nmslib modules).</description>
+    </item>
+    
     <item>
       <title>Tabular Reporting with R Markdown</title>
       <link>http://harry.ahlas.com/post/tabular-reporting-with-rmarkdown/</link>

@@ -7,7 +7,7 @@
 <meta name="author" content="Harry Ahlas">
 <meta name="description" content="People analytics, data science, music, and audio engineering. Views are my own.">
 <meta name="generator" content="Hugo 0.80.0" />
-<title>Upload an Entire Directory through SFTP with R</title>
+<title>Introducing Bescea</title>
 <link rel="shortcut icon" href="http://harry.ahlas.com/images/favicon2.ico">
 <link rel="stylesheet" href="http://harry.ahlas.com/css/style.css">
 <link rel="stylesheet" href="http://harry.ahlas.com/css/highlight.css">
@@ -19,30 +19,33 @@
 
 
 
-<meta property="og:title" content="Upload an Entire Directory through SFTP with R" />
-<meta property="og:description" content="I wanted to speed up the process of uploading this website to the hosting server, as opposed to doing a lot of drag and drop to the ftp client. It turned out to be super easy using R. If you need to do the same, the following code can help get you there. It will replace old files and directories and create new ones as needed.
-Simply set your working directory to the root directory that holds the folders/files you want to upload." />
+<meta property="og:title" content="Introducing Bescea" />
+<meta property="og:description" content="I want to share Bescea, an instant search engine for text. This is perhaps most useful if you want to search through a data frame to find documents about a particular topic.
+Installationdevtools::install_github(&quot;harryahlas/bescea&quot;)Run Bescealibrary(bescea)besceaApp(data = sneapsters, text_field = &quot;post_text&quot;, unique_id = &quot;textid&quot;) bescea search example
+RequirementsRequires RStudio (reticulate and tidyverse packages) and Python (pandas, re, spacy, rank_bm25, tqdm, pickle, numpy, gensim, and nmslib modules)." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="http://harry.ahlas.com/post/upload-an-entire-directory-through-sftp-with-r/" />
-<meta property="article:published_time" content="2019-07-28T00:00:00+00:00" />
-<meta property="article:modified_time" content="2019-07-28T00:00:00+00:00" />
+<meta property="og:url" content="http://harry.ahlas.com/post/introducing-bescea/" />
+<meta property="article:published_time" content="2021-02-16T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-02-16T00:00:00+00:00" />
 
 
-<meta itemprop="name" content="Upload an Entire Directory through SFTP with R">
-<meta itemprop="description" content="I wanted to speed up the process of uploading this website to the hosting server, as opposed to doing a lot of drag and drop to the ftp client. It turned out to be super easy using R. If you need to do the same, the following code can help get you there. It will replace old files and directories and create new ones as needed.
-Simply set your working directory to the root directory that holds the folders/files you want to upload.">
-<meta itemprop="datePublished" content="2019-07-28T00:00:00+00:00" />
-<meta itemprop="dateModified" content="2019-07-28T00:00:00+00:00" />
-<meta itemprop="wordCount" content="146">
+<meta itemprop="name" content="Introducing Bescea">
+<meta itemprop="description" content="I want to share Bescea, an instant search engine for text. This is perhaps most useful if you want to search through a data frame to find documents about a particular topic.
+Installationdevtools::install_github(&quot;harryahlas/bescea&quot;)Run Bescealibrary(bescea)besceaApp(data = sneapsters, text_field = &quot;post_text&quot;, unique_id = &quot;textid&quot;) bescea search example
+RequirementsRequires RStudio (reticulate and tidyverse packages) and Python (pandas, re, spacy, rank_bm25, tqdm, pickle, numpy, gensim, and nmslib modules).">
+<meta itemprop="datePublished" content="2021-02-16T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2021-02-16T00:00:00+00:00" />
+<meta itemprop="wordCount" content="85">
 
 
 
 <meta itemprop="keywords" content="" />
 
 <meta name="twitter:card" content="summary"/>
-<meta name="twitter:title" content="Upload an Entire Directory through SFTP with R"/>
-<meta name="twitter:description" content="I wanted to speed up the process of uploading this website to the hosting server, as opposed to doing a lot of drag and drop to the ftp client. It turned out to be super easy using R. If you need to do the same, the following code can help get you there. It will replace old files and directories and create new ones as needed.
-Simply set your working directory to the root directory that holds the folders/files you want to upload."/>
+<meta name="twitter:title" content="Introducing Bescea"/>
+<meta name="twitter:description" content="I want to share Bescea, an instant search engine for text. This is perhaps most useful if you want to search through a data frame to find documents about a particular topic.
+Installationdevtools::install_github(&quot;harryahlas/bescea&quot;)Run Bescealibrary(bescea)besceaApp(data = sneapsters, text_field = &quot;post_text&quot;, unique_id = &quot;textid&quot;) bescea search example
+RequirementsRequires RStudio (reticulate and tidyverse packages) and Python (pandas, re, spacy, rank_bm25, tqdm, pickle, numpy, gensim, and nmslib modules)."/>
 <meta name="twitter:site" content="@https://www.twitter.com/harry_ahlas"/>
 
 
@@ -65,40 +68,47 @@ Simply set your working directory to the root directory that holds the folders/f
         
 <article class="post">
     <header>
-        <h1>Upload an Entire Directory through SFTP with R</h1>
+        <h1>Introducing Bescea</h1>
         <h2 class="subtitle"></h2>
         <h2 class="headline">
-        July 28, 2019
+        February 16, 2021
         <br>
         
         </h2>
     </header>
     <section id="post-body">
         
+<script src="http://harry.ahlas.com/post/introducing-bescea/index_files/header-attrs/header-attrs.js"></script>
 
 
-<p>I wanted to speed up the process of uploading this website to the hosting server, as opposed to doing a lot of drag and drop to the ftp client. It turned out to be super easy using R. If you need to do the same, the following code can help get you there. It will replace old files and directories and create new ones as needed.</p>
-<p>Simply set your working directory to the root directory that holds the folders/files you want to upload. Then do the following:</p>
+<p>I want to share <em>Bescea</em>, an instant search engine for text. This is perhaps most useful if you want to search through a data frame to find documents about a particular topic.</p>
+<div id="installation" class="section level2">
+<h2>Installation</h2>
+<pre class="r"><code>devtools::install_github(&quot;harryahlas/bescea&quot;)</code></pre>
+</div>
+<div id="run-bescea" class="section level2">
+<h2>Run Bescea</h2>
+<pre class="r"><code>library(bescea)
+besceaApp(data = sneapsters,         
+          text_field = &quot;post_text&quot;,  
+          unique_id = &quot;textid&quot;)     </code></pre>
+<div class="figure">
+<img src="search2.png" alt="" />
+<p class="caption">bescea search example</p>
+</div>
+</div>
+<div id="requirements" class="section level2">
+<h2>Requirements</h2>
+<p>Requires RStudio (<em>reticulate</em> and <em>tidyverse</em> packages) and Python (<em>pandas</em>, <em>re</em>, <em>spacy</em>, <em>rank_bm25</em>, <em>tqdm</em>, <em>pickle</em>, <em>numpy</em>, <em>gensim</em>, and <em>nmslib</em> modules).</p>
+</div>
+<div id="acknowledgements" class="section level2">
+<h2>Acknowledgements</h2>
+<p>This work is based <strong>heavily</strong> on foundational code provided by Josh Taylor (<a href="https://twitter.com/josh_taylor_01" class="uri">https://twitter.com/josh_taylor_01</a>).</p>
 <ul>
-<li>Replace <code>User</code> with your username</li>
-<li>Replace <code>Password</code> with your password</li>
-<li>Replace <code>FTPServer</code> with the server name</li>
-<li>Replace <code>your_directory_name</code> with the root directory on the server you want to update</li>
-<li>Run the code below and you are golden.</li>
+<li><a href="https://towardsdatascience.com/how-to-build-a-search-engine-9f8ffa405eac" class="uri">https://towardsdatascience.com/how-to-build-a-search-engine-9f8ffa405eac</a></li>
+<li><a href="https://towardsdatascience.com/how-to-build-a-smart-search-engine-a86fca0d0795" class="uri">https://towardsdatascience.com/how-to-build-a-smart-search-engine-a86fca0d0795</a></li>
 </ul>
-<pre class="r"><code>library(RCurl)
-
-files_for_upload &lt;- list.files(getwd(), 
-                             full.names=F,
-                             recursive = TRUE)
-
-for (file_for_upload in files_for_upload) {
-  print(file_for_upload)
-  ftpUpload(file_for_upload, paste0(&quot;sftp://User:Password@FTPServer/your_directory_name/&quot;,
-                                              file_for_upload),
-                      .opts = list(ftp.create.missing.dirs=TRUE)
-            )
-}</code></pre>
+</div>
 
     </section>
 </article>
@@ -112,7 +122,7 @@ for (file_for_upload in files_for_upload) {
     </div>
     </a>
     <section id="sharing">
-        <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fharry.ahlas.com%2fpost%2fupload-an-entire-directory-through-sftp-with-r%2f - Upload%20an%20Entire%20Directory%20through%20SFTP%20with%20R by @harry_ahlas"><span class="icon-twitter"> tweet</span></a>
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fharry.ahlas.com%2fpost%2fintroducing-bescea%2f - Introducing%20Bescea by @harry_ahlas"><span class="icon-twitter"> tweet</span></a>
 
 <a class="facebook" href="#" onclick="
     window.open(
@@ -153,10 +163,6 @@ for (file_for_upload in files_for_upload) {
     
     
         <li>
-            <a href="http://harry.ahlas.com/post/introducing-bescea/">Introducing Bescea<aside class="dates">Feb 16 2021</aside></a>
-        </li>
-    
-        <li>
             <a href="http://harry.ahlas.com/post/tabular-reporting-with-rmarkdown/">Tabular Reporting with R Markdown<aside class="dates">Feb 9 2020</aside></a>
         </li>
     
@@ -166,6 +172,10 @@ for (file_for_upload in files_for_upload) {
     
         <li>
             <a href="http://harry.ahlas.com/post/basic-etl-with-r-and-sql/">Basic ETL with R and SQL<aside class="dates">Aug 11 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="http://harry.ahlas.com/post/upload-an-entire-directory-through-sftp-with-r/">Upload an Entire Directory through SFTP with R<aside class="dates">Jul 28 2019</aside></a>
         </li>
     
         <li>

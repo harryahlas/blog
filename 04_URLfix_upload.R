@@ -1,7 +1,7 @@
 # urlfix and upload
 # Not neededas of 1/26/2020
 library(RCurl)
-setwd("C:\\Development\\github\\blogtest\\public\\")
+setwd("D:\\Development\\github\\blog-bundle\\public\\")
 
 blog_files_all <- list.files(getwd(),
                              #pattern=(".html"),
@@ -14,16 +14,16 @@ blog_files <- blog_files_all[blog_files_all != "URLfix_upload.R"]
 #blog_files <- blog_files[grepl(blog_files,pattern = "jpg|png|gif") != TRUE]
 
 # Make files for server ---------------------------------------------------
-##### I DO NT THINK THIS IS NEEDED ANYMORE
-bad_url_section <- "blogtest/blogtest/"
-good_url_section <- "blogtest/"
-
-for(blog_file in blog_files) {
-  x <- readLines(blog_file)
-  y <- gsub(bad_url_section, good_url_section, x)
-  cat(y, file=blog_file, sep="\n")
-}
-
+# ##### I DO NT THINK THIS IS NEEDED ANYMORE
+# bad_url_section <- "blogtest/blogtest/"
+# good_url_section <- "blogtest/"
+# 
+# for(blog_file in blog_files) {
+#   x <- readLines(blog_file)
+#   y <- gsub(bad_url_section, good_url_section, x)
+#   cat(y, file=blog_file, sep="\n")
+# }
+# 
 
 # Reap --------------------------------------------------------------------
 # (enter pw first)
@@ -32,13 +32,13 @@ for(blog_file in blog_files) {
 for (blog_file in blog_files_all) {
   print(blog_file)
   ftpUpload(blog_file,
-            paste0("sftp://edemise:",pw,"@boron.he.net/home/edemise/public_html/blogtest/",
+            paste0("sftp://edemise:",pw,"@boron.he.net/home/edemise/public_html/harry.ahlas.com/",
                    blog_file),
             .opts = list(ftp.create.missing.dirs=TRUE)
   )
 }
 
-setwd("C:\\Development\\github\\blogtest\\")
+setwd("D:\\Development\\github\\blog-bundle\\")
 # Do not run below --------------------------------------------------------
 
 
