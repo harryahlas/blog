@@ -1,0 +1,28 @@
+---
+title: "Introducing Bescea"
+author: "Harry Ahlas"
+date: '2021-02-16'
+slug: introducing-bescea
+categories: []
+tags: []
+---
+
+I want to share *Bescea*, an instant search engine for text.  This is perhaps most useful if you want to search through a data frame to find documents about a particular topic.
+
+## Installation
+
+```{r eval=FALSE}
+devtools::install_github("harryahlas/bescea")
+```
+
+
+## Run Bescea
+
+```{r eval=FALSE}
+library(bescea)
+besceaApp(data = sneapsters,         
+          text_field = "post_text",  
+          unique_id = "textid")     
+```
+
+![buscea search example](search2.png)

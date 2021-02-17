@@ -2,21 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on Harry Ahlas</title>
-    <link>/post/</link>
+    <link>http://harry.ahlas.com/post/</link>
     <description>Recent content in Posts on Harry Ahlas</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 09 Feb 2020 00:00:00 +0000</lastBuildDate>
-    
-	<atom:link href="/post/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Sun, 09 Feb 2020 00:00:00 +0000</lastBuildDate><atom:link href="http://harry.ahlas.com/post/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Tabular Reporting with R Markdown</title>
-      <link>/post/tabular-reporting-with-rmarkdown/</link>
+      <link>http://harry.ahlas.com/post/tabular-reporting-with-rmarkdown/</link>
       <pubDate>Sun, 09 Feb 2020 00:00:00 +0000</pubDate>
       
-      <guid>/post/tabular-reporting-with-rmarkdown/</guid>
+      <guid>http://harry.ahlas.com/post/tabular-reporting-with-rmarkdown/</guid>
       <description>R Markdown is a powerful data communication tool that continues to grow in popularity. Here, we will use R Markdown to build a simple report featuring two tabs that the user can toggle to better understand the data.
 The full code is available on GitHub.
 Below is an image of the report we will be building. Note the Headcount tab is currently in focus, showcasing a graph of company headcount.</description>
@@ -24,60 +20,60 @@ Below is an image of the report we will be building. Note the Headcount tab is c
     
     <item>
       <title>Efficient Filesearching with R</title>
-      <link>/post/efficient-filesearching-with-r/</link>
+      <link>http://harry.ahlas.com/post/efficient-filesearching-with-r/</link>
       <pubDate>Sun, 24 Nov 2019 00:00:00 +0000</pubDate>
       
-      <guid>/post/efficient-filesearching-with-r/</guid>
+      <guid>http://harry.ahlas.com/post/efficient-filesearching-with-r/</guid>
       <description>Search files for specific text in specific filetypesThis is a simple script I use often and think it is worth sharing. It is really good for searching for text within specific types of files. Here is a link to the code and to the github repository. The full code is also available at the bottom of this page.
 When to Use this ScriptOn occasion, there are times where you need to look through old work for something.</description>
     </item>
     
     <item>
       <title>Basic ETL with R and SQL</title>
-      <link>/post/basic-etl-with-r-and-sql/</link>
+      <link>http://harry.ahlas.com/post/basic-etl-with-r-and-sql/</link>
       <pubDate>Sun, 11 Aug 2019 00:00:00 +0000</pubDate>
       
-      <guid>/post/basic-etl-with-r-and-sql/</guid>
+      <guid>http://harry.ahlas.com/post/basic-etl-with-r-and-sql/</guid>
       <description>Create a Calendar Table from Point In Time DataToday we will dive into ETL by taking the following steps:
 Extract data from a point in time tableTransform the extract into a monthly tableLoad the data back to the databaseFor this exercise we will use R and SQLite. I like the simplicity of SQLite. It is very fast for this type of database and easy to install, though there are some drawbacks that we will touch upon.</description>
     </item>
     
     <item>
       <title>Upload an Entire Directory through SFTP with R</title>
-      <link>/post/upload-an-entire-directory-through-sftp-with-r/</link>
+      <link>http://harry.ahlas.com/post/upload-an-entire-directory-through-sftp-with-r/</link>
       <pubDate>Sun, 28 Jul 2019 00:00:00 +0000</pubDate>
       
-      <guid>/post/upload-an-entire-directory-through-sftp-with-r/</guid>
+      <guid>http://harry.ahlas.com/post/upload-an-entire-directory-through-sftp-with-r/</guid>
       <description>I wanted to speed up the process of uploading this website to the hosting server, as opposed to doing a lot of drag and drop to the ftp client. It turned out to be super easy using R. If you need to do the same, the following code can help get you there. It will replace old files and directories and create new ones as needed.
 Simply set your working directory to the root directory that holds the folders/files you want to upload.</description>
     </item>
     
     <item>
       <title>Multi-Condition Data Retrieval</title>
-      <link>/post/multi-condition-data-retrieval/</link>
+      <link>http://harry.ahlas.com/post/multi-condition-data-retrieval/</link>
       <pubDate>Sun, 21 Jul 2019 00:00:00 +0000</pubDate>
       
-      <guid>/post/multi-condition-data-retrieval/</guid>
+      <guid>http://harry.ahlas.com/post/multi-condition-data-retrieval/</guid>
       <description>Use R and SQL to Circumvent Technology Limitations on Large Queries with 2 or more ConditionsSometimes standard business intelligence tools can fail when clients ask for complex data wrangling the tools are not built to retrieve. One people analytics example I have run into is when a client wants to know information about employees as of specific dates.
 On occasion, seemingly simple business questions like this can be challenging if systems are built for single-condition queries.</description>
     </item>
     
     <item>
       <title>Automated Excel Report Generation with R</title>
-      <link>/post/automated-excel-report-generation-with-r/</link>
+      <link>http://harry.ahlas.com/post/automated-excel-report-generation-with-r/</link>
       <pubDate>Sun, 28 Apr 2019 00:00:00 +0000</pubDate>
       
-      <guid>/post/automated-excel-report-generation-with-r/</guid>
+      <guid>http://harry.ahlas.com/post/automated-excel-report-generation-with-r/</guid>
       <description>This post is a follow-up to my earlier post, Use R to add a Data Disclaimer to an Excel Report. In that post, we created a single enterprise-wide human resources report along with a data disclaimer.
 Here we will automate that same report and generate 1 report for each of the 9 lines of business that report to the CEO of the same fictitious company. So one report for each leader who reports directly to the CEO.</description>
     </item>
     
     <item>
       <title>Use R to add a Data Disclaimer to an Excel Report</title>
-      <link>/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/</link>
+      <link>http://harry.ahlas.com/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/</link>
       <pubDate>Sun, 07 Apr 2019 00:00:00 +0000</pubDate>
       
-      <guid>/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/</guid>
+      <guid>http://harry.ahlas.com/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/</guid>
       <description>I work with confidential and restricted data in a legal/regulatory environment. Data needs to be accurate and secure. A robust disclaimer can go a long way in helping meet those needs.
 In this post we will use R to:
 Wrangle data from the hrsample databaseCreate a basic human resources summary report in ExcelAdd a simple data disclaimer tab to our reportYou can find the R script here: https://github.</description>
@@ -85,10 +81,10 @@ In this post we will use R to:
     
     <item>
       <title>The hrsample Package and Database</title>
-      <link>/post/the-hrsample-package-and-database/</link>
+      <link>http://harry.ahlas.com/post/the-hrsample-package-and-database/</link>
       <pubDate>Sun, 17 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>/post/the-hrsample-package-and-database/</guid>
+      <guid>http://harry.ahlas.com/post/the-hrsample-package-and-database/</guid>
       <description>I am excited to announce the initial release of hrsample, a fictitious human resources database! Though still a work in progress, I am very proud to be able to share this evolving project with you.
 Why build an HR database? Several reasons. Primarily, I feel like the online sample HR databases I have seen tend to be clean and simple. If systems were designed perfectly and data was always clean, then all we would need is a single business intelligence tool for this work and I might be out of a job.</description>
     </item>

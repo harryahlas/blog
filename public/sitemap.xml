@@ -3,66 +3,66 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>/</loc>
+    <loc>http://harry.ahlas.com/</loc>
     <lastmod>2020-02-09T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/</loc>
+    <loc>http://harry.ahlas.com/post/</loc>
     <lastmod>2020-02-09T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/tabular-reporting-with-rmarkdown/</loc>
+    <loc>http://harry.ahlas.com/post/tabular-reporting-with-rmarkdown/</loc>
     <lastmod>2020-02-09T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/efficient-filesearching-with-r/</loc>
+    <loc>http://harry.ahlas.com/post/efficient-filesearching-with-r/</loc>
     <lastmod>2019-11-24T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/basic-etl-with-r-and-sql/</loc>
+    <loc>http://harry.ahlas.com/post/basic-etl-with-r-and-sql/</loc>
     <lastmod>2019-08-11T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/upload-an-entire-directory-through-sftp-with-r/</loc>
+    <loc>http://harry.ahlas.com/post/upload-an-entire-directory-through-sftp-with-r/</loc>
     <lastmod>2019-07-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/multi-condition-data-retrieval/</loc>
+    <loc>http://harry.ahlas.com/post/multi-condition-data-retrieval/</loc>
     <lastmod>2019-07-21T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/automated-excel-report-generation-with-r/</loc>
+    <loc>http://harry.ahlas.com/post/automated-excel-report-generation-with-r/</loc>
     <lastmod>2019-04-28T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/</loc>
+    <loc>http://harry.ahlas.com/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/</loc>
     <lastmod>2019-04-07T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/post/the-hrsample-package-and-database/</loc>
+    <loc>http://harry.ahlas.com/post/the-hrsample-package-and-database/</loc>
     <lastmod>2019-03-17T00:00:00+00:00</lastmod>
   </url>
   
   <url>
-    <loc>/about/</loc>
+    <loc>http://harry.ahlas.com/about/</loc>
     <lastmod>2015-06-20T14:02:37+02:00</lastmod>
   </url>
   
   <url>
-    <loc>/categories/</loc>
+    <loc>http://harry.ahlas.com/categories/</loc>
   </url>
   
   <url>
-    <loc>/tags/</loc>
+    <loc>http://harry.ahlas.com/tags/</loc>
   </url>
   
 </urlset>
