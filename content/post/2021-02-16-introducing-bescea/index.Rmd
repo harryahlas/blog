@@ -1,6 +1,6 @@
 ---
-title: "Introducing Bescea"
-author: "Harry Ahlas"
+title: Introducing Bescea
+author: Harry Ahlas
 date: '2021-02-16'
 slug: introducing-bescea
 categories: []
@@ -25,7 +25,7 @@ besceaApp(data = sneapsters,
           unique_id = "textid")     
 ```
  
-![bescea search example](search2.png)
+![](search2.png)
 
 
 ## Requirements
