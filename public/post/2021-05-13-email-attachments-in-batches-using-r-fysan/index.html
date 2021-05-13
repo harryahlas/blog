@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en-us">
+	<head>
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="author" content="Harry Ahlas">
+<meta name="description" content="People analytics, data science, music, and audio engineering. Views are my own.">
+<meta name="generator" content="Hugo 0.80.0" />
+<title>Email Attachments in Batches using R/Fysan</title>
+<link rel="shortcut icon" href="http://harry.ahlas.com/images/favicon2.ico">
+<link rel="stylesheet" href="http://harry.ahlas.com/css/style.css">
+<link rel="stylesheet" href="http://harry.ahlas.com/css/highlight.css">
+
+
+
+<link rel="stylesheet" href="http://harry.ahlas.com/css/monosocialiconsfont.css">
+
+
+
+
+<meta property="og:title" content="Email Attachments in Batches using R/Fysan" />
+<meta property="og:description" content="fysan is a niche package, ideal for people in facing this dilemma:
+
+You need to move many files from one computer to another. Images, text files, etc.
+You are unable to use normal tools such as FTP or Dropbox
+You are unable to share via USB. So no flash drives, CD/DVD burners etc.
+Bluetooth data sharing is prohibited
+
+This sounds ridiculous but I was in this scenario and for that reason I built fysan." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://harry.ahlas.com/post/2021-05-13-email-attachments-in-batches-using-r-fysan/" />
+<meta property="article:published_time" content="2021-05-13T00:00:00+00:00" />
+<meta property="article:modified_time" content="2021-05-13T00:00:00+00:00" />
+
+
+<meta itemprop="name" content="Email Attachments in Batches using R/Fysan">
+<meta itemprop="description" content="fysan is a niche package, ideal for people in facing this dilemma:
+
+You need to move many files from one computer to another. Images, text files, etc.
+You are unable to use normal tools such as FTP or Dropbox
+You are unable to share via USB. So no flash drives, CD/DVD burners etc.
+Bluetooth data sharing is prohibited
+
+This sounds ridiculous but I was in this scenario and for that reason I built fysan.">
+<meta itemprop="datePublished" content="2021-05-13T00:00:00+00:00" />
+<meta itemprop="dateModified" content="2021-05-13T00:00:00+00:00" />
+<meta itemprop="wordCount" content="270">
+
+
+
+<meta itemprop="keywords" content="" />
+
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Email Attachments in Batches using R/Fysan"/>
+<meta name="twitter:description" content="fysan is a niche package, ideal for people in facing this dilemma:
+
+You need to move many files from one computer to another. Images, text files, etc.
+You are unable to use normal tools such as FTP or Dropbox
+You are unable to share via USB. So no flash drives, CD/DVD burners etc.
+Bluetooth data sharing is prohibited
+
+This sounds ridiculous but I was in this scenario and for that reason I built fysan."/>
+<meta name="twitter:site" content="@https://www.twitter.com/harry_ahlas"/>
+
+
+    </head>
+<body>
+    <nav class="main-nav">
+	
+		<a href='http://harry.ahlas.com'> <span class="arrow">←</span>Home</a>
+	
+
+	
+ 		<a href='/about/'>About</a>
+  	
+
+	
+</nav>
+
+    <section id="wrapper">
+        
+        
+<article class="post">
+    <header>
+        <h1>Email Attachments in Batches using R/Fysan</h1>
+        <h2 class="subtitle"></h2>
+        <h2 class="headline">
+        May 13, 2021
+        <br>
+        
+        </h2>
+    </header>
+    <section id="post-body">
+        
+<script src="http://harry.ahlas.com/post/2021-05-13-email-attachments-in-batches-using-r-fysan/index_files/header-attrs/header-attrs.js"></script>
+
+
+<p><em>fysan</em> is a niche package, ideal for people in facing this dilemma:</p>
+<ul>
+<li>You need to move many files from one computer to another. Images, text files, etc.</li>
+<li>You are unable to use normal tools such as FTP or Dropbox</li>
+<li>You are unable to share via USB. So no flash drives, CD/DVD burners etc.</li>
+<li>Bluetooth data sharing is prohibited</li>
+</ul>
+<p>This sounds ridiculous but I was in this scenario and for that reason I built <em>fysan</em>.</p>
+<div id="installation-and-example" class="section level4">
+<h4>Installation and Example</h4>
+<p>Here is a link to GitHub, where you can find installation instructions as well as an example with code: <a href="https://github.com/harryahlas/fysan">https://github.com/harryahlas/fysan</a></p>
+</div>
+<div id="rdcomclient" class="section level4">
+<h4>RDCOMClient</h4>
+<p><em>fysan</em> requires the <em>RDCOMClient</em> package, which may not be available on CRAN for your version of R. You can install it from <a href="https://github.com/dkyleward/RDCOMClient">https://github.com/dkyleward/RDCOMClient</a> as noted here: <a href="https://github.com/omegahat/RDCOMClient/issues/19">https://github.com/omegahat/RDCOMClient/issues/19</a>.</p>
+<p>We are assuming your machine has a COM email client, such as Outlook, already set up.</p>
+<p>If you have need for this tool but do not use Outlook, it should be pretty straight forward to edit the <code>fyleSender()</code> function with code for other email clients. Let me know if that would be useful.</p>
+</div>
+<div id="options" class="section level4">
+<h4>Options</h4>
+<p>Several options are available you can choose:</p>
+<ul>
+<li>the number of attachments per email</li>
+<li>the number of seconds to wait after each email is sent</li>
+<li>which file extensions to search for and send</li>
+<li>what files to avoid sending based on text in the filename</li>
+<li>cc/Bcc</li>
+</ul>
+</div>
+<div id="log-file" class="section level4">
+<h4>Log file</h4>
+<p>There is a log file saved in the current working directory. This log keeps track of files you have already sent. So if the process stops for some reason you can easily start again where you left off.
+This has been tested on Windows 10.</p>
+</div>
+
+    </section>
+</article>
+
+<footer id="post-meta" class="clearfix">
+    <a href="https://twitter.com/harry_ahlas">
+    <img class="avatar" src="http://harry.ahlas.com/images/avatar.png">
+    <div>
+        <span class="dark">Harry Ahlas</span>
+        <span>People Analytics Manager</span>
+    </div>
+    </a>
+    <section id="sharing">
+        <a class="twitter" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fharry.ahlas.com%2fpost%2f2021-05-13-email-attachments-in-batches-using-r-fysan%2f - Email%20Attachments%20in%20Batches%20using%20R%2fFysan by @harry_ahlas"><span class="icon-twitter"> tweet</span></a>
+
+<a class="facebook" href="#" onclick="
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(location.href),
+      'facebook-share-dialog',
+      'width=626,height=436');
+    return false;"><span class="icon-facebook-rect"> Share</span>
+</a>
+
+    </section>
+</footer>
+
+<div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "spf13" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+<ul id="post-list" class="archive readmore">
+    <h3>Read more</h3>
+
+    
+    
+    
+        <li>
+            <a href="http://harry.ahlas.com/post/introducing-bescea/">Introducing Bescea<aside class="dates">Feb 16 2021</aside></a>
+        </li>
+    
+        <li>
+            <a href="http://harry.ahlas.com/post/tabular-reporting-with-rmarkdown/">Tabular Reporting with R Markdown<aside class="dates">Feb 9 2020</aside></a>
+        </li>
+    
+        <li>
+            <a href="http://harry.ahlas.com/post/efficient-filesearching-with-r/">Efficient Filesearching with R<aside class="dates">Nov 24 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="http://harry.ahlas.com/post/basic-etl-with-r-and-sql/">Basic ETL with R and SQL<aside class="dates">Aug 11 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="http://harry.ahlas.com/post/upload-an-entire-directory-through-sftp-with-r/">Upload an Entire Directory through SFTP with R<aside class="dates">Jul 28 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="http://harry.ahlas.com/post/multi-condition-data-retrieval/">Multi-Condition Data Retrieval<aside class="dates">Jul 21 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="http://harry.ahlas.com/post/automated-excel-report-generation-with-r/">Automated Excel Report Generation with R<aside class="dates">Apr 28 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="http://harry.ahlas.com/post/use-r-to-add-a-data-disclaimer-to-an-excel-report/">Use R to add a Data Disclaimer to an Excel Report<aside class="dates">Apr 7 2019</aside></a>
+        </li>
+    
+        <li>
+            <a href="http://harry.ahlas.com/post/the-hrsample-package-and-database/">The hrsample Package and Database<aside class="dates">Mar 17 2019</aside></a>
+        </li>
+    
+</ul>
+
+
+
+        <footer id="footer">
+    
+        <div id="social">
+
+	
+	
+    
+    <a class="symbol" href="https://www.github.com/harryahlas">
+        circlegithub
+    </a>
+    
+    <a class="symbol" href="https://www.twitter.com/harry_ahlas">
+        circletwitterbird
+    </a>
+    
+
+
+</div>
+
+    
+    <p class="small">
+    
+        © Copyright 2021 Harry Ahlas
+    
+    </p>
+</footer>
+
+    </section>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="http://harry.ahlas.com/js/main.js"></script>
+<script src="http://harry.ahlas.com/js/highlight.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+
+
+
+
+
+</body>
+</html>
